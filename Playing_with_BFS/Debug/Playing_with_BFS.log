@@ -1,0 +1,15 @@
+﻿  main.cpp
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\playing_with_bfs\playing_with_bfs\main.cpp(88): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
+          with
+          [
+              T=int
+          ]
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\playing_with_bfs\playing_with_bfs\main.cpp(89): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
+          with
+          [
+              T=int
+          ]
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\playing_with_bfs\playing_with_bfs\main.cpp(136): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\playing_with_bfs\playing_with_bfs\main.cpp(201): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\playing_with_bfs\playing_with_bfs\main.cpp(202): warning C4018: '<': signed/unsigned mismatch
+  Playing_with_BFS.vcxproj -> C:\Users\arkad\Documents\DEADSHOT FILES\C++ Programs\SFML\TESTS\Playing_with_BFS\Debug\Playing_with_BFS.exe
