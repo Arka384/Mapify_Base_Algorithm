@@ -3,7 +3,7 @@
 #include <list>
 #include <vector>
 constexpr int window_dimensions = 800;
-constexpr int box_dimensions = 8;
+constexpr int box_dimensions = 4;
 constexpr int max = window_dimensions / box_dimensions;
 constexpr int vertex = max * max;
 using namespace sf;
@@ -35,6 +35,10 @@ int source = 0, des = 0;
 sf::Vector2i desIndex = sf::Vector2i(max / 2, max / 2);
 sf::Vector2i prevDesIndex;
 
+sf::Image map;
+sf::Sprite spriteMap;
+sf::Texture spriteMapTex;
+
 Clock cl;
 Time dt;
 float mx, my;
@@ -49,7 +53,7 @@ int get_path(void);
 
 int main()
 {
-	RenderWindow window(VideoMode(window_dimensions, window_dimensions), "HAHAHAHAA..", Style::Close);
+	RenderWindow window(VideoMode(window_dimensions, window_dimensions), "Optimized Maps", Style::Close);
 	window.setVerticalSyncEnabled(true);
 	float t = 0;
 	int state = 0;
@@ -119,7 +123,15 @@ int main()
 
 		for (int i = 0; i < max; i++)
 			for (int j = 0; j < max; j++)
-				window.draw(matrix[i][j].box);
+				if (matrix[i][j].box.getFillColor() != sf::Color::Yellow)
+					window.draw(matrix[i][j].box);
+
+		//window.draw(spriteMap);
+
+		for (int i = 0; i < max; i++)
+			for (int j = 0; j < max; j++)
+				if (matrix[i][j].box.getFillColor() == sf::Color::Yellow)
+					window.draw(matrix[i][j].box);
 
 		window.display();
 	}
@@ -128,15 +140,32 @@ int main()
 
 void init(void)
 {
+	//loading image
+	map.loadFromFile("map2.png");
+	spriteMapTex.loadFromFile("map2.png");
+	spriteMap.setTexture(spriteMapTex);
+
 	int count = 0;	//used for vertex numbering 
 	for (int i = 0; i < max; i++) {
 		for (int j = 0; j < max; j++) {
-			matrix[i][j].box.setSize(Vector2f(box_dimensions - 2, box_dimensions - 2));
+			matrix[i][j].box.setSize(Vector2f(box_dimensions, box_dimensions));
 			matrix[i][j].box.setFillColor(Color(92, 92, 92, 255));
-			matrix[i][j].box.setOutlineThickness(2.f);
-			matrix[i][j].box.setOutlineColor(Color::Black);
 			matrix[i][j].box.setPosition(i * box_dimensions, j * box_dimensions);
-			matrix[i][j].wall = 0;
+
+			//segmenting the image as per the box size and sensing the color to modify the maze
+			int halfSize = box_dimensions / 2;
+			unsigned int boxPixlX = i * box_dimensions + halfSize;
+			unsigned int boxPixlY = j * box_dimensions + halfSize;
+			//std::cout << boxPixlX << " " << boxPixlY << "\n";
+			if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
+				matrix[i][j].box.setFillColor(sf::Color(92, 92, 92, 255));
+				matrix[i][j].wall = 0;	//no wall
+			}
+			else {
+				matrix[i][j].box.setFillColor(sf::Color::Black);
+				matrix[i][j].wall = 1;	//set wall
+			}
+
 			matrix[i][j].visited = 0;
 			matrix[i][j].vertex = count;
 			count++;
@@ -195,9 +224,7 @@ void create_adj_mat()
 			adjm.push_back(temp);
 		}
 	}
-	
-	//std::cout << "mapSize :" << " " << adjm[1000].size() << "\n";
-	//std::cout << adjm[1590] << "\n";
+
 	int c = 0;
 	for (auto i = 0; i < adjm.size(); i++) {
 		for (auto j = 0; j < adjm[i].size(); j++)
