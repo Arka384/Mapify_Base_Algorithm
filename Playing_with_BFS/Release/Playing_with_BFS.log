@@ -1,19 +1,33 @@
 ﻿  main.cpp
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(94): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(89): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
           with
           [
               T=int
           ]
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(95): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(90): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
           with
           [
               T=int
           ]
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(155): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(105): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(106): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(119): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(120): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(126): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(127): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(163): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(182): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(183): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(198): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(199): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(219): warning C4018: '<': signed/unsigned mismatch
 c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(234): warning C4018: '<': signed/unsigned mismatch
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(235): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(239): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(241): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(319): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\optimized_graph_representation\playing_with_bfs\main.cpp(320): warning C4018: '<': signed/unsigned mismatch
   Generating code
-  1 of 303 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+  9 of 534 functions ( 1.7%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

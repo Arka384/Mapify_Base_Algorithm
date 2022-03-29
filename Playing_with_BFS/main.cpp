@@ -2,37 +2,36 @@
 #include <iostream>
 #include <list>
 #include <vector>
-constexpr int window_dimensions = 800;
+#include <fstream>
+#include <algorithm>
+#include <map>
+
+constexpr int windowX = 800;
+constexpr int windowY = 800;
 constexpr int box_dimensions = 4;
-constexpr int max = window_dimensions / box_dimensions;
-constexpr int vertex = max * max;
+constexpr int maxX = windowX / box_dimensions;
+constexpr int maxY = windowY / box_dimensions;
+constexpr int vertex = maxX * maxY;
 using namespace sf;
 
 typedef struct cell {
 	RectangleShape box;
-	int wall;
-	int visited;
 	int vertex;
 }cell;
-cell matrix[max][max];
-//int adj_matrix[vertex][vertex] = { 0 }; //haa haa not using this anymore 
-std::vector<std::vector<int>> adjm;
+
+//for grid using a 2d vector of cell type
+std::vector<std::vector <cell>> mat;
+std::vector<cell> matTemp;
+//for adjacency list using a hash map of 
+//integer key and vector as value
 std::vector<int> temp;
-/*
-	//new structure looks like this
-	//but this is not adjacency list noo noooo.
-	//random access on the first level then sequential access for each reference vectors.
-	1->1,2,3
-	2->5,6,8
-	3->2,5
-	4->6,7,1
-	5->34
-*/
+std::map<int, std::vector<int>> adjm;
+
 
 int pred[vertex] = { -1 };
 int path[vertex] = { 0 };
 int source = 0, des = 0;
-sf::Vector2i desIndex = sf::Vector2i(max / 2, max / 2);
+sf::Vector2i desIndex = sf::Vector2i(maxX / 2, maxY / 2);
 sf::Vector2i prevDesIndex;
 
 sf::Image map;
@@ -47,13 +46,12 @@ void init(void);
 void init(int f);
 void mouse_update(void);
 void create_adj_mat(void);
-void add_edge(int, int);
 void bfs(void);
 int get_path(void);
 
 int main()
 {
-	RenderWindow window(VideoMode(window_dimensions, window_dimensions), "Optimized Maps", Style::Close);
+	RenderWindow window(VideoMode(windowX, windowY), "Optimized Maps", Style::Close);
 	window.setVerticalSyncEnabled(true);
 	float t = 0;
 	int state = 0;
@@ -61,9 +59,6 @@ int main()
 
 	while (window.isOpen())
 	{
-		//dt = cl.restart();
-		//t += dt.asSeconds();
-
 		Event e;
 		while (window.pollEvent(e))
 		{
@@ -79,7 +74,7 @@ int main()
 					}
 				}
 				else if (Keyboard::isKeyPressed(Keyboard::R)) {
-					init();
+					init(1);
 					state = 0;
 				}
 				break;
@@ -107,10 +102,10 @@ int main()
 		if (state == 2) {
 			int length = get_path();
 			for (int k = 0; k < length; k++)
-				for (int i = 0; i < max; i++)
-					for (int j = 0; j < max; j++)
-						if (matrix[i][j].vertex == path[k] && path[k] != source && path[k] != des)
-							matrix[i][j].box.setFillColor(Color::Yellow);
+				for (int i = 0; i < mat.size(); i++)
+					for (int j = 0; j < mat[i].size(); j++)
+						if (mat[i][j].vertex == path[k] && path[k] != source && path[k] != des)
+							mat[i][j].box.setFillColor(Color::Yellow);
 			state = 0;
 		}
 
@@ -121,17 +116,18 @@ int main()
 
 		window.clear();
 
-		for (int i = 0; i < max; i++)
-			for (int j = 0; j < max; j++)
-				if (matrix[i][j].box.getFillColor() != sf::Color::Yellow)
-					window.draw(matrix[i][j].box);
+		for (int i = 0; i < mat.size(); i++)
+			for (int j = 0; j < mat[i].size(); j++)
+				if (mat[i][j].box.getFillColor() != sf::Color::Yellow)
+					window.draw(mat[i][j].box);
 
 		//window.draw(spriteMap);
 
-		for (int i = 0; i < max; i++)
-			for (int j = 0; j < max; j++)
-				if (matrix[i][j].box.getFillColor() == sf::Color::Yellow)
-					window.draw(matrix[i][j].box);
+		for (int i = 0; i < mat.size(); i++)
+			for (int j = 0; j < mat[i].size(); j++)
+				if (mat[i][j].box.getFillColor() == sf::Color::Yellow || mat[i][j].box.getFillColor() == sf::Color::Red ||
+					mat[i][j].box.getFillColor() == sf::Color::Green )
+					window.draw(mat[i][j].box);
 
 		window.display();
 	}
@@ -140,36 +136,37 @@ int main()
 
 void init(void)
 {
+	
 	//loading image
-	map.loadFromFile("map2.png");
-	spriteMapTex.loadFromFile("map2.png");
+	map.loadFromFile("Maps/map3.png");
+	spriteMapTex.loadFromFile("Maps/map3.png");
 	spriteMap.setTexture(spriteMapTex);
 
 	int count = 0;	//used for vertex numbering 
-	for (int i = 0; i < max; i++) {
-		for (int j = 0; j < max; j++) {
-			matrix[i][j].box.setSize(Vector2f(box_dimensions, box_dimensions));
-			matrix[i][j].box.setFillColor(Color(92, 92, 92, 255));
-			matrix[i][j].box.setPosition(i * box_dimensions, j * box_dimensions);
-
+	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
+		matTemp.clear();
+		for (int j = 0; j < maxY; j++) {
+			cell c;
+			c.box.setFillColor(Color(92, 92, 92, 255));
+			
 			//segmenting the image as per the box size and sensing the color to modify the maze
 			int halfSize = box_dimensions / 2;
-			unsigned int boxPixlX = i * box_dimensions + halfSize;
-			unsigned int boxPixlY = j * box_dimensions + halfSize;
-			//std::cout << boxPixlX << " " << boxPixlY << "\n";
-			if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
-				matrix[i][j].box.setFillColor(sf::Color(92, 92, 92, 255));
-				matrix[i][j].wall = 0;	//no wall
-			}
-			else {
-				matrix[i][j].box.setFillColor(sf::Color::Black);
-				matrix[i][j].wall = 1;	//set wall
-			}
+			unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+			unsigned int boxPixlY = i * box_dimensions + halfSize;
 
-			matrix[i][j].visited = 0;
-			matrix[i][j].vertex = count;
+			if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
+				c.box.setFillColor(sf::Color(92, 92, 92, 255));
+				c.box.setSize(Vector2f(box_dimensions, box_dimensions));
+				/*c.box.setSize(Vector2f(box_dimensions - 1, box_dimensions - 1));
+				c.box.setOutlineThickness(1.f);
+				c.box.setOutlineColor(sf::Color::Red);*/
+				c.box.setPosition(j * box_dimensions, i * box_dimensions);
+				c.vertex = count;
+				matTemp.push_back(c);
+			}
 			count++;
 		}
+		mat.push_back(matTemp);
 	}
 
 	for (int i = 0; i < vertex; i++) {
@@ -178,22 +175,13 @@ void init(void)
 		adjm.clear();
 	}
 
-	//setting source
-	source = matrix[0][0].vertex;
-	matrix[0][0].box.setFillColor(sf::Color::Red);
-	//for des 
-	des = matrix[max / 2][max / 2].vertex;
-	matrix[max / 2][max / 2].box.setFillColor(sf::Color::Green);
 }
 
 void init(int f)
 {
-	for (int i = 0; i < max; i++) {
-		for (int j = 0; j < max; j++) {
-			if (matrix[i][j].vertex != source && matrix[i][j].vertex != des && matrix[i][j].wall == 0) {
-				matrix[i][j].box.setFillColor(Color(92, 92, 92, 255));
-				matrix[i][j].visited = 0;
-			}
+	for (int i = 0; i < mat.size(); i++) {
+		for (int j = 0; j < mat[i].size(); j++) {
+			mat[i][j].box.setFillColor(Color(92, 92, 92, 255));
 		}
 	}
 
@@ -202,43 +190,67 @@ void init(int f)
 		pred[i] = -1;
 		adjm.clear();
 	}
-	
 }
 
 void create_adj_mat()
 {
 	adjm.clear();
-	for (int i = 0; i < max; i++) {
-		for (int j = 0; j < max; j++) {
+	for (int i = 0; i < mat.size(); i++) {
+		for (int j = 0; j < mat[i].size(); j++) {
 			temp.clear();
-			if (matrix[i][j].wall == 0) {
-				if (j + 1 < max && matrix[i][j + 1].wall == 0)
-					add_edge(matrix[i][j].vertex, matrix[i][j + 1].vertex);
-				if (j - 1 > 0 && matrix[i][j - 1].wall == 0)
-					add_edge(matrix[i][j].vertex, matrix[i][j - 1].vertex);
-				if (i + 1 < max && matrix[i + 1][j].wall == 0)
-					add_edge(matrix[i][j].vertex, matrix[i + 1][j].vertex);
-				if (i - 1 > 0 && matrix[i - 1][j].wall == 0)
-					add_edge(matrix[i][j].vertex, matrix[i - 1][j].vertex);
+
+			//old algorithm
+			//this will no longer work as there is no concept of walls in new approach
+				/*if (j + 1 < mat[i].size() && mat[i][j + 1].wall == 0)
+					add_edge(mat[i][j].vertex, mat[i][j + 1].vertex);
+				if (j - 1 > 0 && mat[i][j - 1].wall == 0)
+					add_edge(mat[i][j].vertex, mat[i][j - 1].vertex);
+				if (i + 1 < mat.size() && mat[i + 1][j].wall == 0)
+					add_edge(mat[i][j].vertex, mat[i + 1][j].vertex);
+				if (i - 1 > 0 && mat[i - 1][j].wall == 0)
+					add_edge(mat[i][j].vertex, mat[i - 1][j].vertex);*/
+
+
+			//new algorithm implementation
+			//checking in low to high number order to get ordered or sorted vectors
+			//up
+			if (i - 1 >= 0) {
+				int item = mat[i][j].vertex - maxX - 1;
+				for (int k = 0; k < mat[i - 1].size(); k++) {
+					if (mat[i - 1][k].vertex > item)
+						break;
+					if (mat[i - 1][k].vertex == item) {
+						temp.push_back(item);
+						break;
+					}
+				}
 			}
-			adjm.push_back(temp);
+			//left
+			if (j - 1 >= 0) {
+				if (mat[i][j - 1].vertex == mat[i][j].vertex - 1)
+					temp.push_back(mat[i][j - 1].vertex);
+			}
+			//right
+			if (j + 1 < mat[i].size()){
+				if (mat[i][j + 1].vertex == mat[i][j].vertex + 1)
+					temp.push_back(mat[i][j + 1].vertex);
+			}
+			//down
+			if (i + 1 < mat.size()) {
+				int item = mat[i][j].vertex + maxX + 1;
+				for (int k = 0; k < mat[i + 1].size(); k++) {
+					if (mat[i + 1][k].vertex > item)
+						break;
+					if (mat[i + 1][k].vertex == item) {
+						temp.push_back(item);
+						break;
+					}
+				}
+			}
+
+			adjm.insert(std::make_pair(mat[i][j].vertex, temp));
 		}
 	}
-
-	int c = 0;
-	for (auto i = 0; i < adjm.size(); i++) {
-		for (auto j = 0; j < adjm[i].size(); j++)
-			c++;
-	}
-	std::cout << "Size with adjMatrix : " << vertex * vertex << "\n";
-	std::cout << "Size with new approach : " << c << "\n";
-}
-
-void add_edge(int a, int b)
-{
-	if (b < 0 || b > vertex - 1)
-		return;
-	temp.push_back(b);
 }
 
 void bfs()
@@ -258,18 +270,29 @@ void bfs()
 		}
 		queue.pop_front();
 
-		//new approach implementation //fast af and working
+		//in this approach
 		//accessing the first vector element with random access.
 		//it's reference vector are accessed sequentially.
-		for (auto k = 0; k != adjm[x].size(); k++) {
+		/*for (int k = 0; k < adjm[x].size(); k++) {
 			int vertexNum = adjm[x][k];
 			if (visited[vertexNum] == false) {
 				visited[vertexNum] = true;
 				queue.push_back(vertexNum);
 				pred[vertexNum] = x;
 			}
-		}
+		}*/
 
+		//in this new approach adjm is a hash map of integer key and a vector of int as value
+		//directly access the vector with the unique key (here x)
+		for (auto k = adjm[x].begin(); k != adjm[x].end(); k++) {
+			int vertexNum = *k;
+			if (visited[vertexNum] == false) {
+				visited[vertexNum] = true;
+				queue.push_back(vertexNum);
+				pred[vertexNum] = x;
+			}
+		}
+		
 	}
 }
 
@@ -293,41 +316,19 @@ void mouse_update()
 		nothing fancy with it...
 	*/
 
-	for (int i = 0; i < max; i++) {
-		for (int j = 0; j < max; j++) {
-			int hot = mx > matrix[i][j].box.getPosition().x && mx < matrix[i][j].box.getPosition().x + box_dimensions
-				&& my > matrix[i][j].box.getPosition().y && my < matrix[i][j].box.getPosition().y + box_dimensions;
+	for (int i = 0; i < mat.size(); i++) {
+		for (int j = 0; j < mat[i].size(); j++) {
+			int hot = mx > mat[i][j].box.getPosition().x && mx < mat[i][j].box.getPosition().x + box_dimensions
+				&& my > mat[i][j].box.getPosition().y && my < mat[i][j].box.getPosition().y + box_dimensions;
 			
 			if (hot && Keyboard::isKeyPressed(Keyboard::Key::S)) {
-				source = matrix[i][j].vertex;
-				matrix[i][j].box.setFillColor(Color::Red);
+				source = mat[i][j].vertex;
+				mat[i][j].box.setFillColor(Color::Red);
 			}
 			if (hot && Keyboard::isKeyPressed(Keyboard::Key::D)) {
-				if (matrix[i][j].wall == 1)
-					continue;
-				des = matrix[i][j].vertex;
-				matrix[i][j].box.setFillColor(Color::Green);
-				init(1);
+				des = mat[i][j].vertex;
+				mat[i][j].box.setFillColor(Color::Green);
 			}	
-
-			if (hot && Mouse::isButtonPressed(Mouse::Button::Left)) {
-				matrix[i][j].wall = 1;
-				matrix[i][j].box.setFillColor(Color::Black);
-				if (i + 1 < max && j + 1 < max) {	//to check if it goes out of screen
-					matrix[i + 1][j].wall = 1;
-					matrix[i + 1][j].box.setFillColor(Color::Black);
-					matrix[i][j + 1].wall = 1;
-					matrix[i][j + 1].box.setFillColor(Color::Black);
-					matrix[i + 1][j + 1].wall = 1;
-					matrix[i + 1][j + 1].box.setFillColor(Color::Black);
-				}
-				
-			}
-
-			if (hot && Mouse::isButtonPressed(Mouse::Button::Right)) {
-				matrix[i][j].wall = 0;
-				matrix[i][j].box.setFillColor(Color(92, 92, 92, 255));
-			}
 		}
 	}
 }
