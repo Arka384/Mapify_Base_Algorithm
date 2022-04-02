@@ -12,16 +12,10 @@ constexpr int box_dimensions = 4;
 constexpr int maxX = windowX / box_dimensions;
 constexpr int maxY = windowY / box_dimensions;
 constexpr int vertex = maxX * maxY;
+std::string mapPath = "Maps/map4.png";
 using namespace sf;
 
-typedef struct cell {
-	RectangleShape box;
-	int vertex;
-}cell;
 
-//for grid using a 2d vector of cell type
-std::vector<std::vector <cell>> gridVector;
-std::vector<cell> gridTemp;
 //for adjacency list using a hash map of 
 //integer key and vector as value
 std::vector<int> temp;
@@ -36,8 +30,6 @@ sf::Image map;
 sf::Sprite spriteMap;
 sf::Texture spriteMapTex;
 
-Clock cl;
-Time dt;
 float mx, my;
 
 void init(void);
@@ -46,6 +38,7 @@ void mouse_update(void);
 void create_adjacencyMap(void);
 void bfs(void);
 int get_path(void);
+void colorImgPixels(float x, float y, int size, sf::Color color);
 
 int main()
 {
@@ -54,6 +47,8 @@ int main()
 	float t = 0;
 	int state = 0;
 	init();
+	create_adjacencyMap();
+
 
 	while (window.isOpen())
 	{
@@ -67,7 +62,6 @@ int main()
 			case Event::KeyPressed:
 				if (Keyboard::isKeyPressed(Keyboard::Enter)) {
 					if (state == 0) {
-						create_adjacencyMap();
 						state = 1;
 					}
 				}
@@ -99,33 +93,27 @@ int main()
 
 		if (state == 2) {
 			int length = get_path();
-			for (int k = 0; k < length; k++)
-				for (int i = 0; i < gridVector.size(); i++)
-					for (int j = 0; j < gridVector[i].size(); j++)
-						if (gridVector[i][j].vertex == path[k] && path[k] != source && path[k] != des)
-							gridVector[i][j].box.setFillColor(Color::Yellow);
+
+			for (int k = 0; k < length; k++) {
+				int currCell = path[k];
+				int i = currCell / maxX;
+				int j = currCell - (i*maxX);
+				float x = j * box_dimensions + (box_dimensions / 2);
+				float y = i * box_dimensions + (box_dimensions / 2);
+				colorImgPixels(x, y, 2, sf::Color::Red);
+			}
+			spriteMapTex.loadFromImage(map);
+			spriteMap.setTexture(spriteMapTex);
+
 			state = 0;
 		}
-
-
 
 
 		/////////////////////////
 
 		window.clear();
 
-		for (int i = 0; i < gridVector.size(); i++)
-			for (int j = 0; j < gridVector[i].size(); j++)
-				if (gridVector[i][j].box.getFillColor() != sf::Color::Yellow)
-					window.draw(gridVector[i][j].box);
-
-		//window.draw(spriteMap);
-
-		for (int i = 0; i < gridVector.size(); i++)
-			for (int j = 0; j < gridVector[i].size(); j++)
-				if (gridVector[i][j].box.getFillColor() == sf::Color::Yellow || gridVector[i][j].box.getFillColor() == sf::Color::Red ||
-					gridVector[i][j].box.getFillColor() == sf::Color::Green )
-					window.draw(gridVector[i][j].box);
+		window.draw(spriteMap);
 
 		window.display();
 	}
@@ -134,107 +122,99 @@ int main()
 
 void init(void)
 {
-	
 	//loading image
-	map.loadFromFile("Maps/map3.png");
-	spriteMapTex.loadFromFile("Maps/map3.png");
+	map.loadFromFile(mapPath);
+	spriteMapTex.loadFromImage(map);
 	spriteMap.setTexture(spriteMapTex);
-
-	int count = 0;	//used for vertex numbering 
-	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
-		gridTemp.clear();
-		for (int j = 0; j < maxY; j++) {
-			cell c;
-			c.box.setFillColor(Color(92, 92, 92, 255));
-			
-			//segmenting the image as per the box size and sensing the color to modify the maze
-			int halfSize = box_dimensions / 2;
-			unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
-			unsigned int boxPixlY = i * box_dimensions + halfSize;
-
-			if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
-				c.box.setFillColor(sf::Color(92, 92, 92, 255));
-				c.box.setSize(Vector2f(box_dimensions, box_dimensions));
-				/*c.box.setSize(Vector2f(box_dimensions - 1, box_dimensions - 1));
-				c.box.setOutlineThickness(1.f);
-				c.box.setOutlineColor(sf::Color::Red);*/
-				c.box.setPosition(j * box_dimensions, i * box_dimensions);
-				c.vertex = count;
-				gridTemp.push_back(c);
-			}
-			count++;
-		}
-		gridVector.push_back(gridTemp);
-	}
 
 	for (int i = 0; i < vertex; i++) {
 		path[i] = 0;
 		pred[i] = -1;
-		adjacencyMap.clear();
 	}
-
 }
 
 void init(int f)
 {
-	for (int i = 0; i < gridVector.size(); i++) {
-		for (int j = 0; j < gridVector[i].size(); j++) {
-			gridVector[i][j].box.setFillColor(Color(92, 92, 92, 255));
-		}
-	}
+	//basically reload the image 
+	map.loadFromFile(mapPath);
+	spriteMapTex.loadFromImage(map);
+	spriteMap.setTexture(spriteMapTex);
 
 	for (int i = 0; i < vertex; i++) {
 		path[i] = 0;
 		pred[i] = -1;
-		adjacencyMap.clear();
 	}
 }
 
 void create_adjacencyMap()
 {
 	adjacencyMap.clear();
-	for (int i = 0; i < gridVector.size(); i++) {
-		for (int j = 0; j < gridVector[i].size(); j++) {
+
+	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
+		for (int j = 0; j < maxY; j++) {
 			temp.clear();
+			int currItem = ((i*maxX) + j);
 
-			//new implementation
-			//checking in low to high number order to get ordered or sorted vectors
-			//up
-			if (i - 1 >= 0) {
-				int item = gridVector[i][j].vertex - maxX - 1;
-				for (int k = 0; k < gridVector[i - 1].size(); k++) {
-					if (gridVector[i - 1][k].vertex > item)
-						break;
-					if (gridVector[i - 1][k].vertex == item) {
+			int halfSize = box_dimensions / 2;
+			unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+			unsigned int boxPixlY = i * box_dimensions + halfSize;
+
+			if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
+				
+				//then sequentially up -> left -> right -> down
+				//up
+				int upPixlX = boxPixlX;
+				int upPixlY = boxPixlY - box_dimensions;
+				
+				if (upPixlY > 0) {
+					if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
+						//push this pixels corresponding vertexNum into temp
+						int item = currItem - maxX;
 						temp.push_back(item);
-						break;
 					}
+					else
+						temp.push_back(0);
 				}
-			}
-			//left
-			if (j - 1 >= 0) {
-				if (gridVector[i][j - 1].vertex == gridVector[i][j].vertex - 1)
-					temp.push_back(gridVector[i][j - 1].vertex);
-			}
-			//right
-			if (j + 1 < gridVector[i].size()){
-				if (gridVector[i][j + 1].vertex == gridVector[i][j].vertex + 1)
-					temp.push_back(gridVector[i][j + 1].vertex);
-			}
-			//down
-			if (i + 1 < gridVector.size()) {
-				int item = gridVector[i][j].vertex + maxX + 1;
-				for (int k = 0; k < gridVector[i + 1].size(); k++) {
-					if (gridVector[i + 1][k].vertex > item)
-						break;
-					if (gridVector[i + 1][k].vertex == item) {
+					
+				//left
+				int leftPixX = boxPixlX - box_dimensions;
+				int leftPixY = boxPixlY;
+				if (leftPixX > 0) {
+					if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
+						int item = currItem - 1;
 						temp.push_back(item);
-						break;
 					}
+					else
+						temp.push_back(0);
 				}
+
+				//right
+				int rightPixX = boxPixlX + box_dimensions;
+				int rightPixY = boxPixlY;
+				if (rightPixX < map.getSize().x) {
+					if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
+						int item = currItem + 1;
+						temp.push_back(item);
+					}
+					else
+						temp.push_back(0);
+				}
+
+				//down
+				int downPixX = boxPixlX;
+				int downPixY = boxPixlY + box_dimensions;
+				if (downPixY < map.getSize().y) {
+					if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
+						int item = currItem + maxX;
+						temp.push_back(item);
+					}
+					else
+						temp.push_back(0);
+				}
+				
+				adjacencyMap.insert(std::make_pair(currItem, temp));
 			}
 
-			adjacencyMap.insert(std::make_pair(gridVector[i][j].vertex, temp));
 		}
 	}
 }
@@ -266,8 +246,8 @@ void bfs()
 				pred[vertexNum] = x;
 			}
 		}
-		
 	}
+
 }
 
 
@@ -284,25 +264,42 @@ int get_path()
 
 void mouse_update()
 {
-	/*
-		mouse related updates
-		like setting walls or blocks, clearing walls, setting destination and source etc;
-		nothing fancy with it...
-	*/
+	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
+		for (int j = 0; j < maxY; j++) {
 
-	for (int i = 0; i < gridVector.size(); i++) {
-		for (int j = 0; j < gridVector[i].size(); j++) {
-			int hot = mx > gridVector[i][j].box.getPosition().x && mx < gridVector[i][j].box.getPosition().x + box_dimensions
-				&& my > gridVector[i][j].box.getPosition().y && my < gridVector[i][j].box.getPosition().y + box_dimensions;
-			
-			if (hot && Keyboard::isKeyPressed(Keyboard::Key::S)) {
-				source = gridVector[i][j].vertex;
-				gridVector[i][j].box.setFillColor(Color::Red);
+			int boxJ = mx / box_dimensions;	//reveresed for a reason. looks kind of odd though :-|
+			int boxI = my / box_dimensions;
+			int hotCell = (boxI*maxX) + boxJ;
+
+			if (Keyboard::isKeyPressed(Keyboard::Key::S)) {
+				source = hotCell;
+				colorImgPixels(mx, my, 5, sf::Color::Blue);
+				spriteMapTex.loadFromImage(map);
+				spriteMap.setTexture(spriteMapTex);
+				return;
 			}
-			if (hot && Keyboard::isKeyPressed(Keyboard::Key::D)) {
-				des = gridVector[i][j].vertex;
-				gridVector[i][j].box.setFillColor(Color::Green);
-			}	
+			if (Keyboard::isKeyPressed(Keyboard::Key::D)) {
+				des = hotCell;
+				colorImgPixels(mx, my, 5, sf::Color::Green);
+				spriteMapTex.loadFromImage(map);
+				spriteMap.setTexture(spriteMapTex);
+				return;
+			}
+		}
+	}
+}
+
+void colorImgPixels(float x, float y, int size, sf::Color color)
+{
+	int xlow = x - size;
+	int xhigh = x + size;
+	int ylow = y - size;
+	int yhigh = y + size;
+	map.setPixel(x, y, color);//curr
+
+	for (int i = xlow; i <= xhigh; i++) {
+		for (int j = ylow; j <= yhigh; j++) {
+			map.setPixel(i, j, color);
 		}
 	}
 }
