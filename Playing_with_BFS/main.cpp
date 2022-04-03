@@ -8,11 +8,11 @@
 
 constexpr int windowX = 800;
 constexpr int windowY = 800;
-constexpr int box_dimensions = 4;
+constexpr int box_dimensions = 2;
 constexpr int maxX = windowX / box_dimensions;
 constexpr int maxY = windowY / box_dimensions;
 constexpr int vertex = maxX * maxY;
-std::string mapPath = "Maps/map4.png";
+std::string mapPath = "Maps/map3.png";
 using namespace sf;
 
 
@@ -21,10 +21,10 @@ using namespace sf;
 std::vector<int> temp;
 std::map<int, std::vector<int>> adjacencyMap;
 
-
 int pred[vertex] = { -1 };
 int path[vertex] = { 0 };
 int source = 0, des = 0;
+bool sourceSet = false, destSet = false;
 
 sf::Image map;
 sf::Sprite spriteMap;
@@ -32,21 +32,21 @@ sf::Texture spriteMapTex;
 
 float mx, my;
 
-void init(void);
-void init(int f);
+void init(int state);
 void mouse_update(void);
 void create_adjacencyMap(void);
 void bfs(void);
 int get_path(void);
 void colorImgPixels(float x, float y, int size, sf::Color color);
+bool compareColorValues(sf::Color color);
 
 int main()
 {
 	RenderWindow window(VideoMode(windowX, windowY), "Optimized Maps", Style::Close);
 	window.setVerticalSyncEnabled(true);
-	float t = 0;
+	//float t = 0;
 	int state = 0;
-	init();
+	init(state);
 	create_adjacencyMap();
 
 
@@ -59,18 +59,6 @@ int main()
 			{
 			case Event::Closed:
 				window.close();
-			case Event::KeyPressed:
-				if (Keyboard::isKeyPressed(Keyboard::Enter)) {
-					if (state == 0) {
-						state = 1;
-					}
-				}
-				else if (Keyboard::isKeyPressed(Keyboard::R)) {
-					init(1);
-					state = 0;
-				}
-				break;
-
 			default:
 				break;
 			}
@@ -82,11 +70,23 @@ int main()
 		my = Mouse::getPosition(window).y;
 
 		//states updating
-		if (state == 0)
-			mouse_update();
+		if (state == 0) {
+			if (!sourceSet || !destSet)
+				mouse_update();
+			if (sourceSet && destSet && Keyboard::isKeyPressed(Keyboard::Enter))
+				state = 1;
+		}
 		
-		
+		if (Keyboard::isKeyPressed(Keyboard::R)) {
+			init(state);
+			state = 0;
+		}
+
 		if (state == 1) {
+			for (int i = 0; i < vertex; i++) {
+				path[i] = 0;
+				pred[i] = -1;
+			}
 			bfs();
 			state = 2;
 		}
@@ -120,30 +120,15 @@ int main()
 }
 
 
-void init(void)
+void init(int state)
 {
-	//loading image
+	//loading image or maybe reloading based upon when it's being called
 	map.loadFromFile(mapPath);
 	spriteMapTex.loadFromImage(map);
 	spriteMap.setTexture(spriteMapTex);
 
-	for (int i = 0; i < vertex; i++) {
-		path[i] = 0;
-		pred[i] = -1;
-	}
-}
-
-void init(int f)
-{
-	//basically reload the image 
-	map.loadFromFile(mapPath);
-	spriteMapTex.loadFromImage(map);
-	spriteMap.setTexture(spriteMapTex);
-
-	for (int i = 0; i < vertex; i++) {
-		path[i] = 0;
-		pred[i] = -1;
-	}
+	sourceSet = false;
+	destSet = false;
 }
 
 void create_adjacencyMap()
@@ -159,7 +144,8 @@ void create_adjacencyMap()
 			unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
 			unsigned int boxPixlY = i * box_dimensions + halfSize;
 
-			if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
+			//if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
+			if (compareColorValues(map.getPixel(boxPixlX, boxPixlY))) {
 				
 				//then sequentially up -> left -> right -> down
 				//up
@@ -167,7 +153,8 @@ void create_adjacencyMap()
 				int upPixlY = boxPixlY - box_dimensions;
 				
 				if (upPixlY > 0) {
-					if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
+					//if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
+					if(compareColorValues(map.getPixel(upPixlX, upPixlY))){
 						//push this pixels corresponding vertexNum into temp
 						int item = currItem - maxX;
 						temp.push_back(item);
@@ -180,7 +167,8 @@ void create_adjacencyMap()
 				int leftPixX = boxPixlX - box_dimensions;
 				int leftPixY = boxPixlY;
 				if (leftPixX > 0) {
-					if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
+					//if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
+					if (compareColorValues(map.getPixel(leftPixX, leftPixY))){
 						int item = currItem - 1;
 						temp.push_back(item);
 					}
@@ -192,7 +180,8 @@ void create_adjacencyMap()
 				int rightPixX = boxPixlX + box_dimensions;
 				int rightPixY = boxPixlY;
 				if (rightPixX < map.getSize().x) {
-					if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
+					//if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
+					if (compareColorValues(map.getPixel(rightPixX, rightPixY))){
 						int item = currItem + 1;
 						temp.push_back(item);
 					}
@@ -204,7 +193,8 @@ void create_adjacencyMap()
 				int downPixX = boxPixlX;
 				int downPixY = boxPixlY + box_dimensions;
 				if (downPixY < map.getSize().y) {
-					if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
+					//if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
+					if (compareColorValues(map.getPixel(downPixX, downPixY))){
 						int item = currItem + maxX;
 						temp.push_back(item);
 					}
@@ -271,15 +261,17 @@ void mouse_update()
 			int boxI = my / box_dimensions;
 			int hotCell = (boxI*maxX) + boxJ;
 
-			if (Keyboard::isKeyPressed(Keyboard::Key::S)) {
+			if (Keyboard::isKeyPressed(Keyboard::Key::S) && sourceSet == false) {
 				source = hotCell;
+				sourceSet = true;
 				colorImgPixels(mx, my, 5, sf::Color::Blue);
 				spriteMapTex.loadFromImage(map);
 				spriteMap.setTexture(spriteMapTex);
 				return;
 			}
-			if (Keyboard::isKeyPressed(Keyboard::Key::D)) {
+			if (Keyboard::isKeyPressed(Keyboard::Key::D) && destSet == false) {
 				des = hotCell;
+				destSet = true;
 				colorImgPixels(mx, my, 5, sf::Color::Green);
 				spriteMapTex.loadFromImage(map);
 				spriteMap.setTexture(spriteMapTex);
@@ -302,4 +294,15 @@ void colorImgPixels(float x, float y, int size, sf::Color color)
 			map.setPixel(i, j, color);
 		}
 	}
+}
+
+bool compareColorValues(sf::Color color) {
+	int r = color.r;
+	int g = color.g;
+	int b = color.b;
+
+	if (r >= 240 && g >= 240 && b >= 240)
+		return true;
+	
+	return false;
 }
