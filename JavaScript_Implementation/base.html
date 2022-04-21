@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <!-- <style>
+    #canvas {
+      position: relative;
+      left: 50px;
+      top: 50px;
+    }
+  </style> -->
+</head>
+
+<body>
+  <!-- <div class="container">
+      <img src="map2.png" alt="" id="SourceImage" srcset="" />
+    </div> -->
+  <div class="canvas">
+    <canvas id="canvas"></canvas>
+  </div>
+  <button id="source">Source</buttonid>
+    <button id="dest">Destination</button>
+    <button id="zoomin">Zoom In</button>
+    <button id="sp">Show Path</button>
+</body>
+<script>
+    //canvas related
+    let canvas;
+    let context;
+    //buttons
+    let sb = document.getElementById('source');
+    let db = document.getElementById('dest');
+    let zin = document.getElementById('zoomin');
+    let swp = document.getElementById('sp');
+    //image related
+    let img = new Image();
+    img.src = "map4.png";
+   
+    //set up the canvas
+    canvas = document.getElementById("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    context = canvas.getContext("2d");
+
+    //algo related
+    let sourceSet = false, destSet = false;
+    let source, destination;
+    let box_dimensions = 4;
+    let maxX = canvas.width/box_dimensions;
+    let maxY = canvas.height/box_dimensions;
+    let vertex = maxX*maxY;
+    let cellSize = 6;
+    let adj = new Map();
+    let pred = new Array(vertex).fill(-1) // predecessor
+    let path = new Array(vertex).fill(0) // path
+
+
+
+    img.onload = function () {
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        createAdjMap();
+    };
+
+
+    //this is called everytime I click mouse
+    function pick(event) {
+        //console.log(event.layerX, event.layerY);    //this is giving me the mouse coords
+        let mx = event.layerX - cellSize;
+        let my = event.layerY - cellSize;
+
+        let boxJ = Math.trunc(mx/box_dimensions);
+        let boxI = Math.trunc(my/box_dimensions);
+        let hotCell = Math.trunc((boxI*maxX) + boxJ);
+        //console.log(mx, my, hotCell);
+
+
+        if(destSet === false) {
+            destination = hotCell;
+            console.log(destination);
+            colorImagePixels(mx, my, cellSize, 0, 255, 0);
+            destSet = true;
+            return;
+        }
+        if(sourceSet === false) {
+            source = hotCell;
+            console.log(source);
+            colorImagePixels(mx, my, cellSize, 0, 0, 255);
+            sourceSet = true;
+            return;
+        }
+
+   }
+
+
+////////////////////////
+   function createAdjMap() {
+        
+        let temp = new Array();
+
+        for(let i=0;i<maxX;i++) {
+            for(let j=0;j<maxY;j++) {
+                temp = [];
+                let currItem = Math.trunc((i*maxX)+j);
+
+                let halfSize = box_dimensions/2;
+                let boxPixlX = j * box_dimensions + halfSize;	//reversed here
+			    let boxPixlY = i * box_dimensions + halfSize;
+
+                if(compareColorValues(boxPixlX, boxPixlY)) {    //if it is white
+
+                  //then sequentially up -> left -> right -> down
+                    //up
+                    let upPixlX = boxPixlX;
+                    let upPixlY = boxPixlY - box_dimensions;
+                    if (upPixlY > 0) {
+					//if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
+					if(compareColorValues(upPixlX, upPixlY)){
+						//push this pixels corresponding vertexNum into temp
+						let item = currItem - maxX;
+						temp.push(item);
+					}
+					// else
+					// 	temp.push(0);
+                    }
+
+                    //left
+                    let leftPixX = boxPixlX - box_dimensions;
+                    let leftPixY = boxPixlY;
+                    if (leftPixX > 0) {
+                        //if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
+                        if (compareColorValues(leftPixX, leftPixY)){
+                            let item = currItem - 1;
+                            temp.push(item);
+                        }
+                        // else
+                        //     temp.push(0);
+                    }
+
+                    //right
+                    let rightPixX = boxPixlX + box_dimensions;
+                    let rightPixY = boxPixlY;
+                    if (rightPixX < canvas.width) {
+                        //if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
+                        if (compareColorValues(rightPixX, rightPixY)){
+                            let item = currItem + 1;
+                            temp.push(item);
+                        }
+                        // else
+                        //     temp.push(0);
+                    }
+
+                    //down
+                    let downPixX = boxPixlX;
+                    let downPixY = boxPixlY + box_dimensions;
+                    if (downPixY < canvas.height) {
+                        //if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
+                        if (compareColorValues(downPixX, downPixY)){
+                            let item = currItem + maxX;
+                            temp.push(item);
+                        }
+                        // else
+                        //     temp.push(0);
+                    }
+
+                    adj[currItem] = temp; 
+                    //console.log(currItem, adj[currItem]);  
+				}
+            }
+        }
+       
+   }
+
+
+   function bfs() {
+        let visited = new Array(vertex).fill(false)
+        let queue = new Array()
+
+        visited[source] = true
+        queue.push(source)
+
+        while (queue.length > 0) {
+            let x = queue.shift() // already popped front
+            if (x === destination) {
+                pred[source] = -1
+                return
+            }
+
+            //in this new approach adjacencyMap is a hash map of integer key and a vector of int as value
+            //directly access the vector with the unique key (here x)
+            x = Math.trunc(x);
+            let curr = adj[x]
+            //console.log(x);
+            for (let k = 0; k < curr.length; k++) {
+                let vNum = curr[k]
+                if (visited[vNum] === false) {
+                    visited[vNum] = true
+                    queue.push(vNum)
+                    pred[vNum] = x
+                }
+            }
+        }
+   }
+
+   function getPath() {
+        let k = 0
+        let i = destination
+        while (pred[i] !== -1) {
+            path[k] = i
+            k = k + 1
+            i = pred[i]
+        }
+        path[k] = i
+        k = k + 1
+        console.log(k);
+        return k
+    }
+
+    function highLightPath() {
+        let length = getPath();
+
+        for(let k=0;k<length;k++) {
+            let currCell = path[k];
+            let i = Math.trunc(currCell / maxX);
+            let j = Math.trunc(currCell - (i*maxX));
+		    let x = j * box_dimensions + (box_dimensions / 2);
+			let y = i * box_dimensions + (box_dimensions / 2);
+
+            colorImagePixels(x, y, 2, 255, 0, 0);
+        }
+    }
+
+
+//////////////////////////////////
+
+    function show_path(event){
+        bfs();
+        //getPath();
+        highLightPath();
+    }
+
+    function zoom_pic(event) {
+        console.log("here");
+        context.scale(2, 2);
+    }
+
+    zin.onclick = function (event) {
+        zoom_pic(event);
+    }
+
+    db.onclick = function (event) {
+        //destination = 1;
+        destSet = false;
+    }
+
+    sb.onclick = function (event) {
+        //source = 1;
+        sourceSet = false;
+    }
+    canvas.addEventListener("click", function (event) {
+        pick(event);
+    });
+
+    swp.onclick=function(event){
+        show_path(event);
+    }
+
+    //to change colors
+    function colorImagePixels(x, y, size, colorR, colorG, colorB) {
+        let xLow = x-size;
+        let xHigh = x+size;
+        let yLow = y-size;
+        let yHigh = y+size;
+
+        for(let i=xLow;i<=xHigh;i++){
+            for(let j=yLow;j<=yHigh;j++){
+                pixel = context.getImageData(i, j, 1, 1);
+                pixel.data[0] = colorR;
+                pixel.data[1] = colorG;
+                pixel.data[2] = colorB;
+                context.putImageData(pixel, i, j);
+            }
+        }
+    }
+
+    function compareColorValues(x, y) {
+        pixel = context.getImageData(x, y, 1, 1);
+        if(pixel.data[0] >= 240 && pixel.data[1] >= 240 && pixel.data[2] >= 240)
+            return true;
+        else 
+            return false;
+    }
+
+</script>
+</html>
