@@ -254,8 +254,8 @@ int get_path()
 
 void mouse_update()
 {
-	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
-		for (int j = 0; j < maxY; j++) {
+	//for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
+	//	for (int j = 0; j < maxY; j++) {
 
 			int boxJ = mx / box_dimensions;	//reveresed for a reason. looks kind of odd though :-|
 			int boxI = my / box_dimensions;
@@ -277,8 +277,8 @@ void mouse_update()
 				spriteMap.setTexture(spriteMapTex);
 				return;
 			}
-		}
-	}
+	/*	}
+	}*/
 }
 
 void colorImgPixels(float x, float y, int size, sf::Color color)
