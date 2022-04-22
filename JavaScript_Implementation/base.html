@@ -69,6 +69,9 @@
         //console.log(event.layerX, event.layerY);    //this is giving me the mouse coords
         let mx = event.layerX - cellSize;
         let my = event.layerY - cellSize;
+        if(compareColorValues(mx, my) === false) {
+            return;
+        }
 
         let boxJ = Math.trunc(mx/box_dimensions);
         let boxI = Math.trunc(my/box_dimensions);
