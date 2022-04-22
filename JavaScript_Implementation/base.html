@@ -47,22 +47,20 @@
     context = canvas.getContext("2d");
 
     //algo related
-    let sourceSet = false, destSet = false;
+    let sourceSet = true, destSet = true;
     let source, destination;
     let box_dimensions = 4;
-    let maxX = canvas.width/box_dimensions;
-    let maxY = canvas.height/box_dimensions;
+    let maxX = canvas.width/box_dimensions; //image loading needs to be done before this
+    let maxY = canvas.height/box_dimensions;//cause accessing the canvas element here
     let vertex = maxX*maxY;
     let cellSize = 6;
     let adj = new Map();
     let pred = new Array(vertex).fill(-1) // predecessor
     let path = new Array(vertex).fill(0) // path
 
-
-
     img.onload = function () {
         context.drawImage(img, 0, 0, canvas.width, canvas.height);
-        createAdjMap();
+        createAdjMap(); //create the hash map form the image after loading the image
     };
 
 
@@ -76,7 +74,6 @@
         let boxI = Math.trunc(my/box_dimensions);
         let hotCell = Math.trunc((boxI*maxX) + boxJ);
         //console.log(mx, my, hotCell);
-
 
         if(destSet === false) {
             destination = hotCell;
@@ -98,83 +95,69 @@
 
 ////////////////////////
    function createAdjMap() {
-        
         let temp = new Array();
 
         for(let i=0;i<maxX;i++) {
             for(let j=0;j<maxY;j++) {
                 temp = [];
-                let currItem = Math.trunc((i*maxX)+j);
+                let currItem = Math.trunc((i*maxX)+j);  //find current vertexNum with current i and j
 
                 let halfSize = box_dimensions/2;
                 let boxPixlX = j * box_dimensions + halfSize;	//reversed here
-			    let boxPixlY = i * box_dimensions + halfSize;
+			    let boxPixlY = i * box_dimensions + halfSize;   //getting the center coordinate of the current cell
 
                 if(compareColorValues(boxPixlX, boxPixlY)) {    //if it is white
-
-                  //then sequentially up -> left -> right -> down
+                    //then sequentially up -> left -> right -> down for adjacent vertices
                     //up
                     let upPixlX = boxPixlX;
                     let upPixlY = boxPixlY - box_dimensions;
                     if (upPixlY > 0) {
-					//if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
-					if(compareColorValues(upPixlX, upPixlY)){
-						//push this pixels corresponding vertexNum into temp
-						let item = currItem - maxX;
-						temp.push(item);
-					}
-					// else
-					// 	temp.push(0);
+                        if(compareColorValues(upPixlX, upPixlY)){
+                            let item = currItem - maxX;
+                            temp.push(item);
+                        }
                     }
 
                     //left
                     let leftPixX = boxPixlX - box_dimensions;
                     let leftPixY = boxPixlY;
                     if (leftPixX > 0) {
-                        //if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
                         if (compareColorValues(leftPixX, leftPixY)){
                             let item = currItem - 1;
                             temp.push(item);
                         }
-                        // else
-                        //     temp.push(0);
                     }
 
                     //right
                     let rightPixX = boxPixlX + box_dimensions;
                     let rightPixY = boxPixlY;
                     if (rightPixX < canvas.width) {
-                        //if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
                         if (compareColorValues(rightPixX, rightPixY)){
                             let item = currItem + 1;
                             temp.push(item);
                         }
-                        // else
-                        //     temp.push(0);
                     }
 
                     //down
                     let downPixX = boxPixlX;
                     let downPixY = boxPixlY + box_dimensions;
                     if (downPixY < canvas.height) {
-                        //if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
                         if (compareColorValues(downPixX, downPixY)){
                             let item = currItem + maxX;
                             temp.push(item);
                         }
-                        // else
-                        //     temp.push(0);
                     }
 
+                    //insert the array into hash map 
+                    //so hash map contains the 4 adjacent vertices of the current vertexNum or cell
                     adj[currItem] = temp; 
-                    //console.log(currItem, adj[currItem]);  
 				}
             }
         }
        
    }
 
-
+   //the bfs function kind of works the same way...
    function bfs() {
         let visited = new Array(vertex).fill(false)
         let queue = new Array()
@@ -268,7 +251,7 @@
         show_path(event);
     }
 
-    //to change colors
+    //created a colored box to the given coordinate with given boxSize and rgb values
     function colorImagePixels(x, y, size, colorR, colorG, colorB) {
         let xLow = x-size;
         let xHigh = x+size;
@@ -286,6 +269,7 @@
         }
     }
 
+    //to compare two color values
     function compareColorValues(x, y) {
         pixel = context.getImageData(x, y, 1, 1);
         if(pixel.data[0] >= 240 && pixel.data[1] >= 240 && pixel.data[2] >= 240)
