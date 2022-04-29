@@ -9,17 +9,17 @@
 constexpr int windowX = 800;
 constexpr int windowY = 800;
 constexpr int box_dimensions = 2;
-constexpr int maxX = windowX / box_dimensions;
-constexpr int maxY = windowY / box_dimensions;
+constexpr int maxX = (int)(windowX / box_dimensions);
+constexpr int maxY = (int)(windowY / box_dimensions);
 constexpr int vertex = maxX * maxY;
-std::string mapPath = "Maps/map3.png";
+std::string mapPath = "Maps/map8.png";
 using namespace sf;
 
 
 //for adjacency list using a hash map of 
 //integer key and vector as value
-std::vector<int> temp;
-std::map<int, std::vector<int>> adjacencyMap;
+//std::vector<int> temp;
+//std::map<int, std::vector<int>> adjacencyMap;	//not anymore
 
 int pred[vertex] = { -1 };
 int path[vertex] = { 0 };
@@ -34,7 +34,7 @@ float mx, my;
 
 void init(int state);
 void mouse_update(void);
-void create_adjacencyMap(void);
+//void create_adjacencyMap(void);
 void bfs(void);
 int get_path(void);
 void colorImgPixels(float x, float y, int size, sf::Color color);
@@ -47,7 +47,7 @@ int main()
 	//float t = 0;
 	int state = 0;
 	init(state);
-	create_adjacencyMap();
+	//create_adjacencyMap();
 
 
 	while (window.isOpen())
@@ -100,7 +100,7 @@ int main()
 				int j = currCell - (i*maxX);
 				float x = j * box_dimensions + (box_dimensions / 2);
 				float y = i * box_dimensions + (box_dimensions / 2);
-				colorImgPixels(x, y, 2, sf::Color::Red);
+				colorImgPixels(x, y, 1, sf::Color::Red);
 			}
 			spriteMapTex.loadFromImage(map);
 			spriteMap.setTexture(spriteMapTex);
@@ -131,83 +131,83 @@ void init(int state)
 	destSet = false;
 }
 
-void create_adjacencyMap()
-{
-	adjacencyMap.clear();
-
-	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
-		for (int j = 0; j < maxY; j++) {
-			temp.clear();
-			int currItem = ((i*maxX) + j);
-
-			int halfSize = box_dimensions / 2;
-			unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
-			unsigned int boxPixlY = i * box_dimensions + halfSize;
-
-			//if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
-			if (compareColorValues(map.getPixel(boxPixlX, boxPixlY))) {
-				
-				//then sequentially up -> left -> right -> down
-				//up
-				int upPixlX = boxPixlX;
-				int upPixlY = boxPixlY - box_dimensions;
-				
-				if (upPixlY > 0) {
-					//if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
-					if(compareColorValues(map.getPixel(upPixlX, upPixlY))){
-						//push this pixels corresponding vertexNum into temp
-						int item = currItem - maxX;
-						temp.push_back(item);
-					}
-					else
-						temp.push_back(0);
-				}
-					
-				//left
-				int leftPixX = boxPixlX - box_dimensions;
-				int leftPixY = boxPixlY;
-				if (leftPixX > 0) {
-					//if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
-					if (compareColorValues(map.getPixel(leftPixX, leftPixY))){
-						int item = currItem - 1;
-						temp.push_back(item);
-					}
-					else
-						temp.push_back(0);
-				}
-
-				//right
-				int rightPixX = boxPixlX + box_dimensions;
-				int rightPixY = boxPixlY;
-				if (rightPixX < map.getSize().x) {
-					//if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
-					if (compareColorValues(map.getPixel(rightPixX, rightPixY))){
-						int item = currItem + 1;
-						temp.push_back(item);
-					}
-					else
-						temp.push_back(0);
-				}
-
-				//down
-				int downPixX = boxPixlX;
-				int downPixY = boxPixlY + box_dimensions;
-				if (downPixY < map.getSize().y) {
-					//if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
-					if (compareColorValues(map.getPixel(downPixX, downPixY))){
-						int item = currItem + maxX;
-						temp.push_back(item);
-					}
-					else
-						temp.push_back(0);
-				}
-				
-				adjacencyMap.insert(std::make_pair(currItem, temp));
-			}
-
-		}
-	}
-}
+//void create_adjacencyMap()
+//{
+//	adjacencyMap.clear();
+//
+//	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
+//		for (int j = 0; j < maxY; j++) {
+//			temp.clear();
+//			int currItem = ((i*maxX) + j);
+//
+//			int halfSize = box_dimensions / 2;
+//			unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+//			unsigned int boxPixlY = i * box_dimensions + halfSize;
+//
+//			//if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
+//			if (compareColorValues(map.getPixel(boxPixlX, boxPixlY))) {
+//				
+//				//then sequentially up -> left -> right -> down
+//				//up
+//				int upPixlX = boxPixlX;
+//				int upPixlY = boxPixlY - box_dimensions;
+//				
+//				if (upPixlY > 0) {
+//					//if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
+//					if(compareColorValues(map.getPixel(upPixlX, upPixlY))){
+//						//push this pixels corresponding vertexNum into temp
+//						int item = currItem - maxX;
+//						temp.push_back(item);
+//					}
+//					else
+//						temp.push_back(0);
+//				}
+//					
+//				//left
+//				int leftPixX = boxPixlX - box_dimensions;
+//				int leftPixY = boxPixlY;
+//				if (leftPixX > 0) {
+//					//if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
+//					if (compareColorValues(map.getPixel(leftPixX, leftPixY))){
+//						int item = currItem - 1;
+//						temp.push_back(item);
+//					}
+//					else
+//						temp.push_back(0);
+//				}
+//
+//				//right
+//				int rightPixX = boxPixlX + box_dimensions;
+//				int rightPixY = boxPixlY;
+//				if (rightPixX < map.getSize().x) {
+//					//if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
+//					if (compareColorValues(map.getPixel(rightPixX, rightPixY))){
+//						int item = currItem + 1;
+//						temp.push_back(item);
+//					}
+//					else
+//						temp.push_back(0);
+//				}
+//
+//				//down
+//				int downPixX = boxPixlX;
+//				int downPixY = boxPixlY + box_dimensions;
+//				if (downPixY < map.getSize().y) {
+//					//if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
+//					if (compareColorValues(map.getPixel(downPixX, downPixY))){
+//						int item = currItem + maxX;
+//						temp.push_back(item);
+//					}
+//					else
+//						temp.push_back(0);
+//				}
+//				
+//				adjacencyMap.insert(std::make_pair(currItem, temp));
+//			}
+//
+//		}
+//	}
+//}
 
 void bfs()
 {
@@ -226,9 +226,71 @@ void bfs()
 		}
 		queue.pop_front();
 
+
+		//previous implementation with hash maps
+
 		//in this new approach adjacencyMap is a hash map of integer key and a vector of int as value
 		//directly access the vector with the unique key (here x)
-		for (auto k = adjacencyMap[x].begin(); k != adjacencyMap[x].end(); k++) {
+		/*for (auto k = adjacencyMap[x].begin(); k != adjacencyMap[x].end(); k++) {
+			int vertexNum = *k;
+			if (visited[vertexNum] == false) {
+				visited[vertexNum] = true;
+				queue.push_back(vertexNum);
+				pred[vertexNum] = x;
+			}
+		}*/
+
+		//////////////////////////////////////////////////////////////////
+		//new implementation without hash map
+		//dynamically determice the adjacents of x
+		//finding adjacents of x 
+		int currItem = x;
+		int i = currItem / maxX;
+		int j = currItem - (i*maxX);
+		int halfSize = box_dimensions / 2;
+		unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+		unsigned int boxPixlY = i * box_dimensions + halfSize;
+		std::vector<int> queueTemp;
+		
+		//up
+		int upPixlX = boxPixlX;
+		int upPixlY = boxPixlY - box_dimensions;
+		if (upPixlY > 0) {
+			if (compareColorValues(map.getPixel(upPixlX, upPixlY))) {
+				int item = currItem - maxX;
+				queueTemp.push_back(item);
+			}
+		}
+		//left
+		int leftPixX = boxPixlX - box_dimensions;
+		int leftPixY = boxPixlY;
+		if (leftPixX > 0) {
+			if (compareColorValues(map.getPixel(leftPixX, leftPixY))) {
+				int item = currItem - 1;
+				queueTemp.push_back(item);
+			}
+		}
+		//right
+		int rightPixX = boxPixlX + box_dimensions;
+		int rightPixY = boxPixlY;
+		if (rightPixX < map.getSize().x) {
+			if (compareColorValues(map.getPixel(rightPixX, rightPixY))) {
+				int item = currItem + 1;
+				queueTemp.push_back(item);
+			}
+		}
+		//down
+		int downPixX = boxPixlX;
+		int downPixY = boxPixlY + box_dimensions;
+		if (downPixY < map.getSize().y) {
+			if (compareColorValues(map.getPixel(downPixX, downPixY))) {
+				int item = currItem + maxX;
+				queueTemp.push_back(item);
+			}
+		}
+
+		//now all the adjacents of x are in queueTemp
+		for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
 			int vertexNum = *k;
 			if (visited[vertexNum] == false) {
 				visited[vertexNum] = true;
@@ -237,6 +299,7 @@ void bfs()
 			}
 		}
 	}
+
 
 }
 
@@ -254,31 +317,26 @@ int get_path()
 
 void mouse_update()
 {
-	//for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
-	//	for (int j = 0; j < maxY; j++) {
+	int boxJ = mx / box_dimensions;	//reveresed for a reason. looks kind of odd though :-|
+	int boxI = my / box_dimensions;
+	int hotCell = (boxI*maxX) + boxJ;
 
-			int boxJ = mx / box_dimensions;	//reveresed for a reason. looks kind of odd though :-|
-			int boxI = my / box_dimensions;
-			int hotCell = (boxI*maxX) + boxJ;
-
-			if (Keyboard::isKeyPressed(Keyboard::Key::S) && sourceSet == false) {
-				source = hotCell;
-				sourceSet = true;
-				colorImgPixels(mx, my, 5, sf::Color::Blue);
-				spriteMapTex.loadFromImage(map);
-				spriteMap.setTexture(spriteMapTex);
-				return;
-			}
-			if (Keyboard::isKeyPressed(Keyboard::Key::D) && destSet == false) {
-				des = hotCell;
-				destSet = true;
-				colorImgPixels(mx, my, 5, sf::Color::Green);
-				spriteMapTex.loadFromImage(map);
-				spriteMap.setTexture(spriteMapTex);
-				return;
-			}
-	/*	}
-	}*/
+	if (Keyboard::isKeyPressed(Keyboard::Key::S) && sourceSet == false) {
+		source = hotCell;
+		sourceSet = true;
+		//colorImgPixels(mx, my, 5, sf::Color::Blue);
+		spriteMapTex.loadFromImage(map);
+		spriteMap.setTexture(spriteMapTex);
+		return;
+	}
+	if (Keyboard::isKeyPressed(Keyboard::Key::D) && destSet == false) {
+		des = hotCell;
+		destSet = true;
+		//colorImgPixels(mx, my, 5, sf::Color::Green);
+		spriteMapTex.loadFromImage(map);
+		spriteMap.setTexture(spriteMapTex);
+		return;
+	}
 }
 
 void colorImgPixels(float x, float y, int size, sf::Color color)
