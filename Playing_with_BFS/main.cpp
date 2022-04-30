@@ -2,27 +2,20 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include <fstream>
-#include <algorithm>
 #include <map>
 
-constexpr int windowX = 800;
-constexpr int windowY = 800;
+constexpr int windowX = 800;	//yeah don't foreget to change them according to image size
+constexpr int windowY = 800;	//otherwise you will get an exception... duhhh..
 constexpr int box_dimensions = 2;
 constexpr int maxX = (int)(windowX / box_dimensions);
 constexpr int maxY = (int)(windowY / box_dimensions);
 constexpr int vertex = maxX * maxY;
-std::string mapPath = "Maps/map8.png";
-using namespace sf;
+std::string mapPath = "Maps/map6.png";
 
-
-//for adjacency list using a hash map of 
-//integer key and vector as value
-//std::vector<int> temp;
-//std::map<int, std::vector<int>> adjacencyMap;	//not anymore
-
-int pred[vertex] = { -1 };
-int path[vertex] = { 0 };
+//int pred[vertex] = { -1 };
+std::map<int, int> pred;	//pred is a hash map now.
+//int path[vertex] = { 0 };
+std::vector<int> path;	//path is a vector now.
 int source = 0, des = 0;
 bool sourceSet = false, destSet = false;
 
@@ -34,7 +27,6 @@ float mx, my;
 
 void init(int state);
 void mouse_update(void);
-//void create_adjacencyMap(void);
 void bfs(void);
 int get_path(void);
 void colorImgPixels(float x, float y, int size, sf::Color color);
@@ -42,22 +34,20 @@ bool compareColorValues(sf::Color color);
 
 int main()
 {
-	RenderWindow window(VideoMode(windowX, windowY), "Optimized Maps", Style::Close);
+	sf::RenderWindow window(sf::VideoMode(windowX, windowY), "Optimized Maps", sf::Style::Close);
 	window.setVerticalSyncEnabled(true);
-	//float t = 0;
 	int state = 0;
 	init(state);
-	//create_adjacencyMap();
 
 
 	while (window.isOpen())
 	{
-		Event e;
+		sf::Event e;
 		while (window.pollEvent(e))
 		{
 			switch (e.type)
 			{
-			case Event::Closed:
+			case sf::Event::Closed:
 				window.close();
 			default:
 				break;
@@ -66,27 +56,23 @@ int main()
 
 		///////////////////////
 
-		mx = Mouse::getPosition(window).x;
-		my = Mouse::getPosition(window).y;
+		mx = sf::Mouse::getPosition(window).x;
+		my = sf::Mouse::getPosition(window).y;
 
 		//states updating
 		if (state == 0) {
 			if (!sourceSet || !destSet)
 				mouse_update();
-			if (sourceSet && destSet && Keyboard::isKeyPressed(Keyboard::Enter))
+			if (sourceSet && destSet && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 				state = 1;
 		}
 		
-		if (Keyboard::isKeyPressed(Keyboard::R)) {
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
 			init(state);
 			state = 0;
 		}
 
 		if (state == 1) {
-			for (int i = 0; i < vertex; i++) {
-				path[i] = 0;
-				pred[i] = -1;
-			}
 			bfs();
 			state = 2;
 		}
@@ -127,92 +113,17 @@ void init(int state)
 	spriteMapTex.loadFromImage(map);
 	spriteMap.setTexture(spriteMapTex);
 
+	pred.clear();
+	path.clear();
 	sourceSet = false;
 	destSet = false;
 }
 
-//void create_adjacencyMap()
-//{
-//	adjacencyMap.clear();
-//
-//	for (int i = 0; i < maxX; i++) {	//full range using maxX and maxY as image size is to be considered
-//		for (int j = 0; j < maxY; j++) {
-//			temp.clear();
-//			int currItem = ((i*maxX) + j);
-//
-//			int halfSize = box_dimensions / 2;
-//			unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
-//			unsigned int boxPixlY = i * box_dimensions + halfSize;
-//
-//			//if (map.getPixel(boxPixlX, boxPixlY) == sf::Color::White) {
-//			if (compareColorValues(map.getPixel(boxPixlX, boxPixlY))) {
-//				
-//				//then sequentially up -> left -> right -> down
-//				//up
-//				int upPixlX = boxPixlX;
-//				int upPixlY = boxPixlY - box_dimensions;
-//				
-//				if (upPixlY > 0) {
-//					//if (map.getPixel(upPixlX, upPixlY) == sf::Color::White) {
-//					if(compareColorValues(map.getPixel(upPixlX, upPixlY))){
-//						//push this pixels corresponding vertexNum into temp
-//						int item = currItem - maxX;
-//						temp.push_back(item);
-//					}
-//					else
-//						temp.push_back(0);
-//				}
-//					
-//				//left
-//				int leftPixX = boxPixlX - box_dimensions;
-//				int leftPixY = boxPixlY;
-//				if (leftPixX > 0) {
-//					//if (map.getPixel(leftPixX, leftPixY) == sf::Color::White) {
-//					if (compareColorValues(map.getPixel(leftPixX, leftPixY))){
-//						int item = currItem - 1;
-//						temp.push_back(item);
-//					}
-//					else
-//						temp.push_back(0);
-//				}
-//
-//				//right
-//				int rightPixX = boxPixlX + box_dimensions;
-//				int rightPixY = boxPixlY;
-//				if (rightPixX < map.getSize().x) {
-//					//if (map.getPixel(rightPixX, rightPixY) == sf::Color::White) {
-//					if (compareColorValues(map.getPixel(rightPixX, rightPixY))){
-//						int item = currItem + 1;
-//						temp.push_back(item);
-//					}
-//					else
-//						temp.push_back(0);
-//				}
-//
-//				//down
-//				int downPixX = boxPixlX;
-//				int downPixY = boxPixlY + box_dimensions;
-//				if (downPixY < map.getSize().y) {
-//					//if (map.getPixel(downPixX, downPixY) == sf::Color::White) {
-//					if (compareColorValues(map.getPixel(downPixX, downPixY))){
-//						int item = currItem + maxX;
-//						temp.push_back(item);
-//					}
-//					else
-//						temp.push_back(0);
-//				}
-//				
-//				adjacencyMap.insert(std::make_pair(currItem, temp));
-//			}
-//
-//		}
-//	}
-//}
 
 void bfs()
 {
 	std::list<int> queue;
-	bool visited[vertex] = { false };
+	std::map<int, bool>visited;
 
 	visited[source] = true;
 	queue.push_back(source);
@@ -226,21 +137,6 @@ void bfs()
 		}
 		queue.pop_front();
 
-
-		//previous implementation with hash maps
-
-		//in this new approach adjacencyMap is a hash map of integer key and a vector of int as value
-		//directly access the vector with the unique key (here x)
-		/*for (auto k = adjacencyMap[x].begin(); k != adjacencyMap[x].end(); k++) {
-			int vertexNum = *k;
-			if (visited[vertexNum] == false) {
-				visited[vertexNum] = true;
-				queue.push_back(vertexNum);
-				pred[vertexNum] = x;
-			}
-		}*/
-
-		//////////////////////////////////////////////////////////////////
 		//new implementation without hash map
 		//dynamically determice the adjacents of x
 		//finding adjacents of x 
@@ -308,11 +204,13 @@ int get_path()
 {
 	int k = 0, i = des;
 	while (pred[i] != -1) {
-		path[k++] = i;
+		//path[k++] = i;
+		path.push_back(i);
 		i = pred[i];
 	}
-	path[k++] = i;
-	return k;
+	//path[k++] = i;
+	path.push_back(i);
+	return path.size();
 }
 
 void mouse_update()
@@ -321,7 +219,9 @@ void mouse_update()
 	int boxI = my / box_dimensions;
 	int hotCell = (boxI*maxX) + boxJ;
 
-	if (Keyboard::isKeyPressed(Keyboard::Key::S) && sourceSet == false) {
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && sourceSet == false) {
+		if (!compareColorValues(map.getPixel(mx, my)))
+			return;
 		source = hotCell;
 		sourceSet = true;
 		//colorImgPixels(mx, my, 5, sf::Color::Blue);
@@ -329,7 +229,9 @@ void mouse_update()
 		spriteMap.setTexture(spriteMapTex);
 		return;
 	}
-	if (Keyboard::isKeyPressed(Keyboard::Key::D) && destSet == false) {
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) && destSet == false) {
+		if (!compareColorValues(map.getPixel(mx, my)))
+			return;
 		des = hotCell;
 		destSet = true;
 		//colorImgPixels(mx, my, 5, sf::Color::Green);
