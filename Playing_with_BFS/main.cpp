@@ -4,18 +4,16 @@
 #include <vector>
 #include <map>
 
-constexpr int windowX = 800;	//yeah don't foreget to change them according to image size
-constexpr int windowY = 800;	//otherwise you will get an exception... duhhh..
+constexpr int windowX = 1080;	//yeah don't foreget to change them according to image size
+constexpr int windowY = 1080;	//otherwise you will get an exception... duhhh..
 constexpr int box_dimensions = 2;
 constexpr int maxX = (int)(windowX / box_dimensions);
 constexpr int maxY = (int)(windowY / box_dimensions);
 constexpr int vertex = maxX * maxY;
-std::string mapPath = "Maps/map6.png";
+std::string mapPath = "Maps/map8.png";
 
 //int pred[vertex] = { -1 };
 std::map<int, int> pred;	//pred is a hash map now.
-//int path[vertex] = { 0 };
-std::vector<int> path;	//path is a vector now.
 int source = 0, des = 0;
 bool sourceSet = false, destSet = false;
 
@@ -28,7 +26,6 @@ float mx, my;
 void init(int state);
 void mouse_update(void);
 void bfs(void);
-int get_path(void);
 void colorImgPixels(float x, float y, int size, sf::Color color);
 bool compareColorValues(sf::Color color);
 
@@ -78,16 +75,19 @@ int main()
 		}
 
 		if (state == 2) {
-			int length = get_path();
+			int predVal = des;
 
-			for (int k = 0; k < length; k++) {
-				int currCell = path[k];
+			while (pred[predVal] != -1) {
+				int currCell = predVal;
 				int i = currCell / maxX;
 				int j = currCell - (i*maxX);
 				float x = j * box_dimensions + (box_dimensions / 2);
 				float y = i * box_dimensions + (box_dimensions / 2);
 				colorImgPixels(x, y, 1, sf::Color::Red);
+
+				predVal = pred[predVal];
 			}
+			
 			spriteMapTex.loadFromImage(map);
 			spriteMap.setTexture(spriteMapTex);
 
@@ -114,7 +114,6 @@ void init(int state)
 	spriteMap.setTexture(spriteMapTex);
 
 	pred.clear();
-	path.clear();
 	sourceSet = false;
 	destSet = false;
 }
@@ -138,7 +137,7 @@ void bfs()
 		queue.pop_front();
 
 		//new implementation without hash map
-		//dynamically determice the adjacents of x
+		//dynamically determice the adjacents of x (n8 adjacency)
 		//finding adjacents of x 
 		int currItem = x;
 		int i = currItem / maxX;
@@ -185,6 +184,44 @@ void bfs()
 			}
 		}
 
+		//top left
+		int topleftPixX = boxPixlX - box_dimensions;
+		int topleftPixY = boxPixlY - box_dimensions;
+		if (topleftPixX > 0 && topleftPixY > 0) {
+			if (compareColorValues(map.getPixel(topleftPixX, topleftPixY))) {
+				int item = currItem - maxX - 1;
+				queueTemp.push_back(item);
+			}
+		}
+		//top right
+		int toprightPixX = boxPixlX + box_dimensions;
+		int toprightPixY = boxPixlY - box_dimensions;
+		if (toprightPixX < map.getSize().x && toprightPixY > 0) {
+			if (compareColorValues(map.getPixel(toprightPixX, toprightPixY))) {
+				int item = currItem - maxX + 1;
+				queueTemp.push_back(item);
+			}
+		}
+		//bottom left
+		int bottomleftPixX = boxPixlX - box_dimensions;
+		int bottomleftPixY = boxPixlY + box_dimensions;
+		if (bottomleftPixX > 0 && bottomleftPixY < map.getSize().y) {
+			if (compareColorValues(map.getPixel(bottomleftPixX, bottomleftPixY))) {
+				int item = currItem + maxX - 1;
+				queueTemp.push_back(item);
+			}
+		}
+		//bottom right
+		int bottomrightPixX = boxPixlX + box_dimensions;
+		int bottomrightPixY = boxPixlY + box_dimensions;
+		if (bottomrightPixX < map.getSize().x && bottomrightPixY < map.getSize().y) {
+			if (compareColorValues(map.getPixel(bottomrightPixX, bottomrightPixY))) {
+				int item = currItem + maxX + 1;
+				queueTemp.push_back(item);
+			}
+		}
+
+
 		//now all the adjacents of x are in queueTemp
 		for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
 			int vertexNum = *k;
@@ -197,20 +234,6 @@ void bfs()
 	}
 
 
-}
-
-
-int get_path()
-{
-	int k = 0, i = des;
-	while (pred[i] != -1) {
-		//path[k++] = i;
-		path.push_back(i);
-		i = pred[i];
-	}
-	//path[k++] = i;
-	path.push_back(i);
-	return path.size();
 }
 
 void mouse_update()
