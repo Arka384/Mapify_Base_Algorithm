@@ -1,29 +1,29 @@
 ﻿  main.cpp
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(62): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
+          with
+          [
+              T=int
+          ]
 c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(63): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
           with
           [
               T=int
           ]
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(64): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
-          with
-          [
-              T=int
-          ]
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(152): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(293): warning C4018: '<': signed/unsigned mismatch
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(302): warning C4018: '<': signed/unsigned mismatch
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(321): warning C4018: '<': signed/unsigned mismatch
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(330): warning C4018: '<': signed/unsigned mismatch
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(339): warning C4018: '<': signed/unsigned mismatch
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(351): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(352): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(356): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(366): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(379): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(380): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(381): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(382): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(383): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(137): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(250): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(259): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(278): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(287): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(296): warning C4018: '<': signed/unsigned mismatch
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(308): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(309): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(313): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(323): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(336): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(337): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(338): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(339): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\arkad\documents\deadshot files\c++ programs\sfml\tests\mapify_base_algorithm\playing_with_bfs\main.cpp(340): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
   Generating code
   28 of 466 functions ( 6.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation

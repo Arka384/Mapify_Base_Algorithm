@@ -10,9 +10,8 @@ constexpr int box_dimensions = 2;
 constexpr int maxX = (int)(windowX / box_dimensions);
 constexpr int maxY = (int)(windowY / box_dimensions);
 constexpr int vertex = maxX * maxY;
-std::string mapPath = "Maps/map8.png";
+std::string mapPath = "Maps/map9.png";
 
-//std::map<int, int> pred;	//pred is a hash map now.
 std::map<int, int> predFromSource, predFromDest;
 std::list<int> sourceQueue, destQueue;
 std::map<int, bool> sourceVisited, destVisisted;
@@ -70,7 +69,7 @@ int main()
 			if (sourceSet && destSet && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 				state = 1;
 		}
-		
+
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
 			init(state);
 			state = 0;
@@ -81,23 +80,9 @@ int main()
 				bfs();
 				bfsExecuted = true;
 			}
-				
-			state = 2;
-		}
-
-		if (state == 2) {
-			
-
-
-			
-			/*spriteMapTex.loadFromImage(map);
-			spriteMap.setTexture(spriteMapTex);*/
-
-
 
 			state = 0;
 		}
-
 
 		/////////////////////////
 
@@ -154,94 +139,66 @@ void bfs() {
 
 	spriteMapTex.loadFromImage(map);
 	spriteMap.setTexture(spriteMapTex);
-	
-	/*std::cout << predFromSource[sb] << "\n";
-	std::cout << predFromSource[db] << "\n";
-	std::cout << predFromDest[sb] << "\n";
-	std::cout << predFromDest[db] << "\n";*/
-
-	/*std::cout << "first\n";
-	for (auto i = predFromSource.begin(); i != predFromSource.end(); i++)
-		std::cout << i->first << " " << i->second << "\n";
-	std::cout << "second\n";
-	for (auto i = predFromDest.begin(); i != predFromDest.end(); i++)
-		std::cout << i->first << " " << i->second << "\n";*/
 }
 
-int sourceBfs()
-{
-//	while (sourceQueue.empty() != 1) {
+int sourceBfs() {
 	if (sourceQueue.empty() == 1)
 		return 0;
 
-		int x = sourceQueue.front();
+	int x = sourceQueue.front();
+	sourceQueue.pop_front();
 
-		/*if (x == des) {
-			predFromSource[source] = -1;
-			return 1;
-		}*/
-		sourceQueue.pop_front();
+	int currItem = x;
+	int i = currItem / maxX;
+	int j = currItem - (i*maxX);
+	int halfSize = box_dimensions / 2;
+	unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+	unsigned int boxPixlY = i * box_dimensions + halfSize;
+	std::vector<int> queueTemp;
+	queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
 
-		int currItem = x;
-		int i = currItem / maxX;
-		int j = currItem - (i*maxX);
-		int halfSize = box_dimensions / 2;
-		unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
-		unsigned int boxPixlY = i * box_dimensions + halfSize;
-		std::vector<int> queueTemp;
-		queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
-
-		//now all the adjacents of x are in queueTemp
-		for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
-			int vertexNum = *k;
-			if (sourceVisited[vertexNum] == false) {
-				sourceVisited[vertexNum] = true;
-				sourceQueue.push_back(vertexNum);
-				predFromSource[vertexNum] = x;
-				if (predFromDest.find(vertexNum) != predFromDest.end())
-					return vertexNum;
-			}
+	//now all the adjacents of x are in queueTemp
+	for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
+		int vertexNum = *k;
+		if (sourceVisited[vertexNum] == false) {
+			sourceVisited[vertexNum] = true;
+			sourceQueue.push_back(vertexNum);
+			predFromSource[vertexNum] = x;
+			if (predFromDest.find(vertexNum) != predFromDest.end())
+				return vertexNum;
 		}
-//	}
-		return -1;
+	}
+	return -1;
 }
 
 int destBfs() {
-
-//	while (destQueue.empty() != 1) {
 	if (destQueue.empty() == 1)
 		return 0;
 
-		int x = destQueue.front();
+	int x = destQueue.front();
+	destQueue.pop_front();
 
-		/*if (x == source) {
-			predFromDest[des] = -1;
-			return 1;
-		}*/
-		destQueue.pop_front();
+	int currItem = x;
+	int i = currItem / maxX;
+	int j = currItem - (i*maxX);
+	int halfSize = box_dimensions / 2;
+	unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+	unsigned int boxPixlY = i * box_dimensions + halfSize;
+	std::vector<int> queueTemp;
+	queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
 
-		int currItem = x;
-		int i = currItem / maxX;
-		int j = currItem - (i*maxX);
-		int halfSize = box_dimensions / 2;
-		unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
-		unsigned int boxPixlY = i * box_dimensions + halfSize;
-		std::vector<int> queueTemp;
-		queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
-
-		//now all the adjacents of x are in queueTemp
-		for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
-			int vertexNum = *k;
-			if (destVisisted[vertexNum] == false) {
-				destVisisted[vertexNum] = true;
-				destQueue.push_back(vertexNum);
-				predFromDest[vertexNum] = x;
-				if (predFromSource.find(vertexNum) != predFromSource.end())
-					return vertexNum;
-			}
+	//now all the adjacents of x are in queueTemp
+	for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
+		int vertexNum = *k;
+		if (destVisisted[vertexNum] == false) {
+			destVisisted[vertexNum] = true;
+			destQueue.push_back(vertexNum);
+			predFromDest[vertexNum] = x;
+			if (predFromSource.find(vertexNum) != predFromSource.end())
+				return vertexNum;
 		}
-//	}
-		return -1;
+	}
+	return -1;
 }
 
 std::vector<int> getPath(int sb, int db) {
@@ -253,7 +210,7 @@ std::vector<int> getPath(int sb, int db) {
 		path.push_back(current);
 		index = current;
 	}
-	
+
 	index = (sb > db) ? sb : db;
 	while (predFromDest.find(index) != predFromDest.end()) {
 		int current = predFromDest.find(index)->second;
@@ -396,6 +353,6 @@ bool compareColorValues(sf::Color color) {
 
 	if (r >= 240 && g >= 240 && b >= 240)
 		return true;
-	
+
 	return false;
 }
