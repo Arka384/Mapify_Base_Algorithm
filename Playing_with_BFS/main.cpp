@@ -10,9 +10,8 @@ constexpr int box_dimensions = 2;
 constexpr int maxX = (int)(windowX / box_dimensions);
 constexpr int maxY = (int)(windowY / box_dimensions);
 constexpr int vertex = maxX * maxY;
-std::string mapPath = "Maps/map8.png";
+std::string mapPath = "Maps/map9.png";
 
-//int pred[vertex] = { -1 };
 std::map<int, int> pred;	//pred is a hash map now.
 int source = 0, des = 0;
 bool sourceSet = false, destSet = false;
@@ -26,6 +25,7 @@ float mx, my;
 void init(int state);
 void mouse_update(void);
 void bfs(void);
+std::vector<int> getN8Adjacents(int currItem, int boxPixlX, int boxPixlY);
 void colorImgPixels(float x, float y, int size, sf::Color color);
 bool compareColorValues(sf::Color color);
 
@@ -146,81 +146,7 @@ void bfs()
 		unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
 		unsigned int boxPixlY = i * box_dimensions + halfSize;
 		std::vector<int> queueTemp;
-		
-		//up
-		int upPixlX = boxPixlX;
-		int upPixlY = boxPixlY - box_dimensions;
-		if (upPixlY > 0) {
-			if (compareColorValues(map.getPixel(upPixlX, upPixlY))) {
-				int item = currItem - maxX;
-				queueTemp.push_back(item);
-			}
-		}
-		//left
-		int leftPixX = boxPixlX - box_dimensions;
-		int leftPixY = boxPixlY;
-		if (leftPixX > 0) {
-			if (compareColorValues(map.getPixel(leftPixX, leftPixY))) {
-				int item = currItem - 1;
-				queueTemp.push_back(item);
-			}
-		}
-		//right
-		int rightPixX = boxPixlX + box_dimensions;
-		int rightPixY = boxPixlY;
-		if (rightPixX < map.getSize().x) {
-			if (compareColorValues(map.getPixel(rightPixX, rightPixY))) {
-				int item = currItem + 1;
-				queueTemp.push_back(item);
-			}
-		}
-		//down
-		int downPixX = boxPixlX;
-		int downPixY = boxPixlY + box_dimensions;
-		if (downPixY < map.getSize().y) {
-			if (compareColorValues(map.getPixel(downPixX, downPixY))) {
-				int item = currItem + maxX;
-				queueTemp.push_back(item);
-			}
-		}
-
-		//top left
-		int topleftPixX = boxPixlX - box_dimensions;
-		int topleftPixY = boxPixlY - box_dimensions;
-		if (topleftPixX > 0 && topleftPixY > 0) {
-			if (compareColorValues(map.getPixel(topleftPixX, topleftPixY))) {
-				int item = currItem - maxX - 1;
-				queueTemp.push_back(item);
-			}
-		}
-		//top right
-		int toprightPixX = boxPixlX + box_dimensions;
-		int toprightPixY = boxPixlY - box_dimensions;
-		if (toprightPixX < map.getSize().x && toprightPixY > 0) {
-			if (compareColorValues(map.getPixel(toprightPixX, toprightPixY))) {
-				int item = currItem - maxX + 1;
-				queueTemp.push_back(item);
-			}
-		}
-		//bottom left
-		int bottomleftPixX = boxPixlX - box_dimensions;
-		int bottomleftPixY = boxPixlY + box_dimensions;
-		if (bottomleftPixX > 0 && bottomleftPixY < map.getSize().y) {
-			if (compareColorValues(map.getPixel(bottomleftPixX, bottomleftPixY))) {
-				int item = currItem + maxX - 1;
-				queueTemp.push_back(item);
-			}
-		}
-		//bottom right
-		int bottomrightPixX = boxPixlX + box_dimensions;
-		int bottomrightPixY = boxPixlY + box_dimensions;
-		if (bottomrightPixX < map.getSize().x && bottomrightPixY < map.getSize().y) {
-			if (compareColorValues(map.getPixel(bottomrightPixX, bottomrightPixY))) {
-				int item = currItem + maxX + 1;
-				queueTemp.push_back(item);
-			}
-		}
-
+		queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
 
 		//now all the adjacents of x are in queueTemp
 		for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
@@ -234,6 +160,87 @@ void bfs()
 	}
 
 
+}
+
+std::vector<int> getN8Adjacents(int currItem, int boxPixlX, int boxPixlY)
+{
+	std::vector<int> queueTemp;
+
+	//up
+	int upPixlX = boxPixlX;
+	int upPixlY = boxPixlY - box_dimensions;
+	if (upPixlY > 0) {
+		if (compareColorValues(map.getPixel(upPixlX, upPixlY))) {
+			int item = currItem - maxX;
+			queueTemp.push_back(item);
+		}
+	}
+	//left
+	int leftPixX = boxPixlX - box_dimensions;
+	int leftPixY = boxPixlY;
+	if (leftPixX > 0) {
+		if (compareColorValues(map.getPixel(leftPixX, leftPixY))) {
+			int item = currItem - 1;
+			queueTemp.push_back(item);
+		}
+	}
+	//right
+	int rightPixX = boxPixlX + box_dimensions;
+	int rightPixY = boxPixlY;
+	if (rightPixX < map.getSize().x) {
+		if (compareColorValues(map.getPixel(rightPixX, rightPixY))) {
+			int item = currItem + 1;
+			queueTemp.push_back(item);
+		}
+	}
+	//down
+	int downPixX = boxPixlX;
+	int downPixY = boxPixlY + box_dimensions;
+	if (downPixY < map.getSize().y) {
+		if (compareColorValues(map.getPixel(downPixX, downPixY))) {
+			int item = currItem + maxX;
+			queueTemp.push_back(item);
+		}
+	}
+
+	//top left
+	int topleftPixX = boxPixlX - box_dimensions;
+	int topleftPixY = boxPixlY - box_dimensions;
+	if (topleftPixX > 0 && topleftPixY > 0) {
+		if (compareColorValues(map.getPixel(topleftPixX, topleftPixY))) {
+			int item = currItem - maxX - 1;
+			queueTemp.push_back(item);
+		}
+	}
+	//top right
+	int toprightPixX = boxPixlX + box_dimensions;
+	int toprightPixY = boxPixlY - box_dimensions;
+	if (toprightPixX < map.getSize().x && toprightPixY > 0) {
+		if (compareColorValues(map.getPixel(toprightPixX, toprightPixY))) {
+			int item = currItem - maxX + 1;
+			queueTemp.push_back(item);
+		}
+	}
+	//bottom left
+	int bottomleftPixX = boxPixlX - box_dimensions;
+	int bottomleftPixY = boxPixlY + box_dimensions;
+	if (bottomleftPixX > 0 && bottomleftPixY < map.getSize().y) {
+		if (compareColorValues(map.getPixel(bottomleftPixX, bottomleftPixY))) {
+			int item = currItem + maxX - 1;
+			queueTemp.push_back(item);
+		}
+	}
+	//bottom right
+	int bottomrightPixX = boxPixlX + box_dimensions;
+	int bottomrightPixY = boxPixlY + box_dimensions;
+	if (bottomrightPixX < map.getSize().x && bottomrightPixY < map.getSize().y) {
+		if (compareColorValues(map.getPixel(bottomrightPixX, bottomrightPixY))) {
+			int item = currItem + maxX + 1;
+			queueTemp.push_back(item);
+		}
+	}
+
+	return queueTemp;
 }
 
 void mouse_update()
