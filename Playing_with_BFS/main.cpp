@@ -12,9 +12,12 @@ constexpr int maxY = (int)(windowY / box_dimensions);
 constexpr int vertex = maxX * maxY;
 std::string mapPath = "Maps/map9.png";
 
-std::map<int, int> pred;	//pred is a hash map now.
+std::map<int, int> predFromSource, predFromDest;
+std::list<int> sourceQueue, destQueue;
+std::map<int, bool> sourceVisited, destVisisted;
 int source = 0, des = 0;
 bool sourceSet = false, destSet = false;
+bool bfsExecuted = false;
 
 sf::Image map;
 sf::Sprite spriteMap;
@@ -24,7 +27,10 @@ float mx, my;
 
 void init(int state);
 void mouse_update(void);
+int sourceBfs(void);
+int destBfs(void);
 void bfs(void);
+std::vector<int> getPath(int sb, int db);
 std::vector<int> getN8Adjacents(int currItem, int boxPixlX, int boxPixlY);
 void colorImgPixels(float x, float y, int size, sf::Color color);
 bool compareColorValues(sf::Color color);
@@ -63,37 +69,20 @@ int main()
 			if (sourceSet && destSet && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 				state = 1;
 		}
-		
+
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
 			init(state);
 			state = 0;
 		}
 
 		if (state == 1) {
-			bfs();
-			state = 2;
-		}
-
-		if (state == 2) {
-			int predVal = des;
-
-			while (pred[predVal] != -1) {
-				int currCell = predVal;
-				int i = currCell / maxX;
-				int j = currCell - (i*maxX);
-				float x = j * box_dimensions + (box_dimensions / 2);
-				float y = i * box_dimensions + (box_dimensions / 2);
-				colorImgPixels(x, y, 1, sf::Color::Red);
-
-				predVal = pred[predVal];
+			if (!bfsExecuted) {
+				bfs();
+				bfsExecuted = true;
 			}
-			
-			spriteMapTex.loadFromImage(map);
-			spriteMap.setTexture(spriteMapTex);
 
 			state = 0;
 		}
-
 
 		/////////////////////////
 
@@ -113,54 +102,125 @@ void init(int state)
 	spriteMapTex.loadFromImage(map);
 	spriteMap.setTexture(spriteMapTex);
 
-	pred.clear();
+	sourceQueue.clear();
+	destQueue.clear();
+	sourceVisited.clear();
+	destVisisted.clear();
+	predFromSource.clear();
+	predFromDest.clear();
+	bfsExecuted = false;
 	sourceSet = false;
 	destSet = false;
 }
 
+void bfs() {
+	sourceVisited[source] = true;
+	sourceQueue.push_back(source);
 
-void bfs()
-{
-	std::list<int> queue;
-	std::map<int, bool>visited;
+	destVisisted[des] = true;
+	destQueue.push_back(des);
+	int sb = -1, db = -1;
 
-	visited[source] = true;
-	queue.push_back(source);
-
-	while (queue.empty() != 1) {
-		int x = queue.front();
-
-		if (x == des) {
-			pred[source] = -1;
-			return;
-		}
-		queue.pop_front();
-
-		//new implementation without hash map
-		//dynamically determice the adjacents of x (n8 adjacency)
-		//finding adjacents of x 
-		int currItem = x;
-		int i = currItem / maxX;
-		int j = currItem - (i*maxX);
-		int halfSize = box_dimensions / 2;
-		unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
-		unsigned int boxPixlY = i * box_dimensions + halfSize;
-		std::vector<int> queueTemp;
-		queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
-
-		//now all the adjacents of x are in queueTemp
-		for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
-			int vertexNum = *k;
-			if (visited[vertexNum] == false) {
-				visited[vertexNum] = true;
-				queue.push_back(vertexNum);
-				pred[vertexNum] = x;
-			}
-		}
+	while (sb == -1 && db == -1) {
+		sb = sourceBfs();
+		db = destBfs();
 	}
 
+	std::vector<int> path = getPath(sb, db);
+	for (auto i = path.begin(); i != path.end(); i++)
+	{
+		int currentCell = *i;
+		int iIndex = currentCell / maxX;
+		int jIndex = currentCell - (iIndex * maxX);
+		int x = jIndex * box_dimensions + (box_dimensions / 2);
+		int y = iIndex * box_dimensions + (box_dimensions / 2);
+		colorImgPixels(x, y, 1, sf::Color::Red);
+	}
 
+	spriteMapTex.loadFromImage(map);
+	spriteMap.setTexture(spriteMapTex);
 }
+
+int sourceBfs() {
+	if (sourceQueue.empty() == 1)
+		return 0;
+
+	int x = sourceQueue.front();
+	sourceQueue.pop_front();
+
+	int currItem = x;
+	int i = currItem / maxX;
+	int j = currItem - (i*maxX);
+	int halfSize = box_dimensions / 2;
+	unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+	unsigned int boxPixlY = i * box_dimensions + halfSize;
+	std::vector<int> queueTemp;
+	queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
+
+	//now all the adjacents of x are in queueTemp
+	for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
+		int vertexNum = *k;
+		if (sourceVisited[vertexNum] == false) {
+			sourceVisited[vertexNum] = true;
+			sourceQueue.push_back(vertexNum);
+			predFromSource[vertexNum] = x;
+			if (predFromDest.find(vertexNum) != predFromDest.end())
+				return vertexNum;
+		}
+	}
+	return -1;
+}
+
+int destBfs() {
+	if (destQueue.empty() == 1)
+		return 0;
+
+	int x = destQueue.front();
+	destQueue.pop_front();
+
+	int currItem = x;
+	int i = currItem / maxX;
+	int j = currItem - (i*maxX);
+	int halfSize = box_dimensions / 2;
+	unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
+	unsigned int boxPixlY = i * box_dimensions + halfSize;
+	std::vector<int> queueTemp;
+	queueTemp = getN8Adjacents(currItem, boxPixlX, boxPixlY);
+
+	//now all the adjacents of x are in queueTemp
+	for (auto k = queueTemp.begin(); k != queueTemp.end(); k++) {
+		int vertexNum = *k;
+		if (destVisisted[vertexNum] == false) {
+			destVisisted[vertexNum] = true;
+			destQueue.push_back(vertexNum);
+			predFromDest[vertexNum] = x;
+			if (predFromSource.find(vertexNum) != predFromSource.end())
+				return vertexNum;
+		}
+	}
+	return -1;
+}
+
+std::vector<int> getPath(int sb, int db) {
+	std::vector<int> path;
+
+	int index = (sb > db) ? sb : db;
+	while (predFromSource.find(index) != predFromSource.end()) {
+		int current = predFromSource.find(index)->second;
+		path.push_back(current);
+		index = current;
+	}
+
+	index = (sb > db) ? sb : db;
+	while (predFromDest.find(index) != predFromDest.end()) {
+		int current = predFromDest.find(index)->second;
+		path.push_back(current);
+		index = current;
+	}
+
+	return path;
+}
+
 
 std::vector<int> getN8Adjacents(int currItem, int boxPixlX, int boxPixlY)
 {
@@ -293,6 +353,6 @@ bool compareColorValues(sf::Color color) {
 
 	if (r >= 240 && g >= 240 && b >= 240)
 		return true;
-	
+
 	return false;
 }
