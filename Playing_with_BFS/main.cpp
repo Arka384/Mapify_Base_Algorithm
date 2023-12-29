@@ -3,6 +3,8 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <thread>
+#include <chrono>
 
 constexpr int windowX = 1080;	//yeah don't foreget to change them according to image size
 constexpr int windowY = 1080;	//otherwise you will get an exception... duhhh..
@@ -32,8 +34,9 @@ int destBfs(void);
 void bfs(void);
 std::vector<int> getPath(int sb, int db);
 std::vector<int> getN8Adjacents(int currItem, int boxPixlX, int boxPixlY);
-void colorImgPixels(float x, float y, int size, sf::Color color);
+void colorImgPixels(int x, int y, int size, sf::Color color);
 bool compareColorValues(sf::Color color);
+std::pair<int, int> vertexToCoords(int vertex);
 
 int main()
 {
@@ -42,6 +45,7 @@ int main()
 	int state = 0;
 	init(state);
 
+	std::thread bfsThread;
 
 	while (window.isOpen())
 	{
@@ -52,6 +56,15 @@ int main()
 			{
 			case sf::Event::Closed:
 				window.close();
+				return 0;
+			case sf::Event::KeyPressed:
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
+					bfsThread = std::thread(bfs);
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+					init(state);
+				}
+				break;
 			default:
 				break;
 			}
@@ -62,27 +75,11 @@ int main()
 		mx = sf::Mouse::getPosition(window).x;
 		my = sf::Mouse::getPosition(window).y;
 
-		//states updating
-		if (state == 0) {
-			if (!sourceSet || !destSet)
-				mouse_update();
-			if (sourceSet && destSet && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
-				state = 1;
-		}
+		if (!sourceSet || !destSet)
+			mouse_update();
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
-			init(state);
-			state = 0;
-		}
-
-		if (state == 1) {
-			if (!bfsExecuted) {
-				bfs();
-				bfsExecuted = true;
-			}
-
-			state = 0;
-		}
+		if (bfsExecuted && bfsThread.joinable())
+			bfsThread.join();
 
 		/////////////////////////
 
@@ -92,6 +89,7 @@ int main()
 
 		window.display();
 	}
+
 }
 
 
@@ -119,11 +117,19 @@ void bfs() {
 
 	destVisisted[des] = true;
 	destQueue.push_back(des);
+	int updateInterval = 50, currUpdateInterval = 0;
 	int sb = -1, db = -1;
 
 	while (sb == -1 && db == -1) {
 		sb = sourceBfs();
 		db = destBfs();
+
+		currUpdateInterval++;
+		if (currUpdateInterval >= updateInterval) {
+			currUpdateInterval = 0;
+			spriteMapTex.loadFromImage(map);
+			spriteMap.setTexture(spriteMapTex);
+		}
 	}
 
 	std::vector<int> path = getPath(sb, db);
@@ -139,6 +145,8 @@ void bfs() {
 
 	spriteMapTex.loadFromImage(map);
 	spriteMap.setTexture(spriteMapTex);
+
+	bfsExecuted = true;
 }
 
 int sourceBfs() {
@@ -150,7 +158,7 @@ int sourceBfs() {
 
 	int currItem = x;
 	int i = currItem / maxX;
-	int j = currItem - (i*maxX);
+	int j = currItem - (i * maxX);
 	int halfSize = box_dimensions / 2;
 	unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
 	unsigned int boxPixlY = i * box_dimensions + halfSize;
@@ -163,9 +171,16 @@ int sourceBfs() {
 		if (sourceVisited[vertexNum] == false) {
 			sourceVisited[vertexNum] = true;
 			sourceQueue.push_back(vertexNum);
+
+			// for intermideate visualization
+			std::pair<int, int> point = vertexToCoords(vertexNum);
+			colorImgPixels(point.first, point.second, 0, sf::Color::Red);
+			//
+
 			predFromSource[vertexNum] = x;
-			if (predFromDest.find(vertexNum) != predFromDest.end())
+			if (predFromDest.find(vertexNum) != predFromDest.end()) {
 				return vertexNum;
+			}
 		}
 	}
 	return -1;
@@ -180,7 +195,7 @@ int destBfs() {
 
 	int currItem = x;
 	int i = currItem / maxX;
-	int j = currItem - (i*maxX);
+	int j = currItem - (i * maxX);
 	int halfSize = box_dimensions / 2;
 	unsigned int boxPixlX = j * box_dimensions + halfSize;	//reversed here
 	unsigned int boxPixlY = i * box_dimensions + halfSize;
@@ -193,9 +208,16 @@ int destBfs() {
 		if (destVisisted[vertexNum] == false) {
 			destVisisted[vertexNum] = true;
 			destQueue.push_back(vertexNum);
+
+			// for intermideate visualization
+			std::pair<int, int> point = vertexToCoords(vertexNum);
+			colorImgPixels(point.first, point.second, 0, sf::Color::Red);
+			//
+
 			predFromDest[vertexNum] = x;
-			if (predFromSource.find(vertexNum) != predFromSource.end())
+			if (predFromSource.find(vertexNum) != predFromSource.end()) {
 				return vertexNum;
+			}
 		}
 	}
 	return -1;
@@ -307,14 +329,14 @@ void mouse_update()
 {
 	int boxJ = mx / box_dimensions;	//reveresed for a reason. looks kind of odd though :-|
 	int boxI = my / box_dimensions;
-	int hotCell = (boxI*maxX) + boxJ;
+	int hotCell = (boxI * maxX) + boxJ;
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && sourceSet == false) {
 		if (!compareColorValues(map.getPixel(mx, my)))
 			return;
 		source = hotCell;
 		sourceSet = true;
-		//colorImgPixels(mx, my, 5, sf::Color::Blue);
+		colorImgPixels(mx, my, 5, sf::Color::Blue);
 		spriteMapTex.loadFromImage(map);
 		spriteMap.setTexture(spriteMapTex);
 		return;
@@ -324,14 +346,14 @@ void mouse_update()
 			return;
 		des = hotCell;
 		destSet = true;
-		//colorImgPixels(mx, my, 5, sf::Color::Green);
+		colorImgPixels(mx, my, 5, sf::Color::Green);
 		spriteMapTex.loadFromImage(map);
 		spriteMap.setTexture(spriteMapTex);
 		return;
 	}
 }
 
-void colorImgPixels(float x, float y, int size, sf::Color color)
+void colorImgPixels(int x, int y, int size, sf::Color color)
 {
 	int xlow = x - size;
 	int xhigh = x + size;
@@ -353,6 +375,17 @@ bool compareColorValues(sf::Color color) {
 
 	if (r >= 240 && g >= 240 && b >= 240)
 		return true;
+	if (color == sf::Color::Red || color == sf::Color::Green ||
+		color == sf::Color::Blue)
+		return true;
 
 	return false;
+}
+
+std::pair<int, int> vertexToCoords(int vertex) {
+	int i = vertex / maxX;
+	int j = vertex - i * maxX;
+	int x = j * box_dimensions + box_dimensions / 2;
+	int y = i * box_dimensions + box_dimensions / 2;
+	return std::make_pair(x, y);
 }
